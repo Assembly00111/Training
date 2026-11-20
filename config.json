@@ -1,0 +1,13 @@
+{
+  "title": "My Training",
+  "race": {
+    "name": "Half Marathon",
+    "date": "2027-01-03",
+    "distance_km": 21.0975,
+    "long_run_target_km": 16
+  },
+  "goal": "A faster 800m",
+  "units": "km",
+  "default_theme": "watch",
+  "repo": "Assembly00111/Training"
+}

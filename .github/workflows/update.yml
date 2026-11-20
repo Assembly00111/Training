@@ -1,0 +1,67 @@
+name: Update dashboard
+
+# Pulls fresh data from Garmin's Personal API (read-only), rebuilds the public
+# page with place names removed, and publishes it to GitHub Pages.
+# Raw data is never committed: it exists only on the runner during the job.
+
+on:
+  schedule:
+    - cron: "17 */3 * * *"   # every 3 hours, at :17 past
+  workflow_dispatch:          # the "Refresh now" link -> Run workflow
+  push:
+    branches: [main]
+    paths:
+      - "template.html"
+      - "build.py"
+      - "pull.py"
+      - "garmin.py"
+      - "config.json"
+      - "plan.json"
+      - ".github/workflows/update.yml"
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    env:
+      TZ: Asia/Kolkata
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Pull Garmin data
+        env:
+          GARMIN_PERSONAL_API_KEY: ${{ secrets.GARMIN_PERSONAL_API_KEY }}
+        run: |
+          if [ -z "$GARMIN_PERSONAL_API_KEY" ]; then
+            echo "::error::The GARMIN_PERSONAL_API_KEY secret is not set. Add it under Settings > Secrets and variables > Actions."
+            exit 1
+          fi
+          python pull.py --full
+
+      - name: Build public page
+        run: python build.py --public
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: site
+
+      - id: deploy
+        uses: actions/deploy-pages@v4

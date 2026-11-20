@@ -1,0 +1,128 @@
+{
+  "name": "Half Marathon (Jan 3) to 800m (March)",
+  "start": "2026-11-11",
+  "checkpoint_passed": null,
+  "goals": {
+    "half": {"date": "2027-01-03", "goal": "2:00:00", "a_goal": "1:55:00"},
+    "800": {"date": "2027-03-14", "goal": "2:15", "stretch": "2:10"}
+  },
+  "paces": {
+    "easy":  {"p200": [390, 420], "p155": [375, 405]},
+    "long":  {"p200": [375, 405], "p155": [360, 390]},
+    "tempo": {"p200": [335, 345], "p155": [320, 330]},
+    "easy2": {"p200": [360, 390], "p155": [360, 390]}
+  },
+  "cadence_target": [165, 170],
+  "phases": [
+    {"n": 1, "name": "Phase 1 · Half marathon build", "from": "2026-11-09", "to": "2027-01-03"},
+    {"n": 2, "name": "Phase 2 · 800m build", "from": "2027-01-04", "to": "2027-03-14"}
+  ],
+  "gym": [
+    {"from": "2026-11-11", "to": "2026-11-29", "days": {"Mon": "Gym A · push + core", "Wed": "Gym B · pull + core", "Fri": "Gym C · runner's legs"}},
+    {"from": "2026-11-30", "to": "2026-12-13", "days": {"Mon": "Gym A · short (exams)", "Fri": "Gym C · short (exams)"}},
+    {"from": "2026-12-14", "to": "2027-01-03", "days": {"Mon": "Gym A · push + core", "Wed": "Gym B · pull + core", "Fri": "Gym C · runner's legs"}},
+    {"from": "2027-01-11", "to": "2027-03-07", "days": {"Mon": "Legs A · strength", "Tue": "Push", "Thu": "Pull", "Fri": "Legs B · power + arms"}},
+    {"from": "2027-03-08", "to": "2027-03-14", "days": {"Mon": "Light legs · race week"}}
+  ],
+  "sessions": [
+    {"d": "2026-11-11", "ph": 1, "wk": 1, "type": "easy", "title": "Easy run", "km": 4},
+    {"d": "2026-11-12", "ph": 1, "wk": 1, "type": "tempo", "title": "10 min easy + 10 min @ 5:40 + 5 min easy", "km": 4.4},
+    {"d": "2026-11-14", "ph": 1, "wk": 1, "type": "long", "title": "Long run", "km": 8},
+
+    {"d": "2026-11-16", "ph": 1, "wk": 2, "type": "easy", "title": "Easy run", "km": 4},
+    {"d": "2026-11-17", "ph": 1, "wk": 2, "type": "intervals", "title": "8 × 400 m @ 1:58, 90 s jog", "km": 3.2},
+    {"d": "2026-11-18", "ph": 1, "wk": 2, "type": "easy", "title": "Easy run", "km": 5},
+    {"d": "2026-11-19", "ph": 1, "wk": 2, "type": "tempo", "title": "2 km + 3 km @ 5:40 + 1 km", "km": 6},
+    {"d": "2026-11-21", "ph": 1, "wk": 2, "type": "long", "title": "Long run", "km": 10},
+
+    {"d": "2026-11-23", "ph": 1, "wk": 3, "type": "easy", "title": "Easy run", "km": 5},
+    {"d": "2026-11-24", "ph": 1, "wk": 3, "type": "intervals", "title": "5 × 1 km @ 5:12, 2 min jog", "km": 5},
+    {"d": "2026-11-25", "ph": 1, "wk": 3, "type": "easy", "title": "Easy run", "km": 5},
+    {"d": "2026-11-26", "ph": 1, "wk": 3, "type": "tempo", "title": "Checkpoint: 2 km + 5 km @ 5:35 + 1 km", "km": 8, "key": "Checkpoint tempo"},
+    {"d": "2026-11-28", "ph": 1, "wk": 3, "type": "long", "title": "Long run · practise fuelling", "km": 12, "key": "First run past 10 km"},
+
+    {"d": "2026-12-01", "ph": 1, "wk": 4, "type": "intervals", "title": "4 × 1 km @ 5:12 (skip if a paper next morning)", "km": 4, "optional": true},
+    {"d": "2026-12-02", "ph": 1, "wk": 4, "type": "easy", "title": "Easy run", "km": 4, "optional": true},
+    {"d": "2026-12-05", "ph": 1, "wk": 4, "type": "long", "title": "Long run, easy", "km": 10},
+
+    {"d": "2026-12-08", "ph": 1, "wk": 5, "type": "intervals", "title": "6 × 400 m @ 1:58", "km": 2.4, "optional": true},
+    {"d": "2026-12-09", "ph": 1, "wk": 5, "type": "easy", "title": "Easy run", "km": 4, "optional": true},
+    {"d": "2026-12-12", "ph": 1, "wk": 5, "type": "long", "title": "Long run, easy", "km": 13},
+
+    {"d": "2026-12-14", "ph": 1, "wk": 6, "type": "easy", "title": "Easy run", "km": 5},
+    {"d": "2026-12-15", "ph": 1, "wk": 6, "type": "intervals", "title": "6 × 1 km @ 5:10 (5:02), 90 s jog", "km": 6},
+    {"d": "2026-12-16", "ph": 1, "wk": 6, "type": "easy", "title": "Easy run", "km": 5},
+    {"d": "2026-12-17", "ph": 1, "wk": 6, "type": "tempo", "title": "2 km + 6 km @ 5:38 (5:22) + 1 km", "km": 9},
+    {"d": "2026-12-19", "ph": 1, "wk": 6, "type": "long", "title": "16 km, last 3 km @ 5:40 (5:25)", "km": 16, "key": "Key 16 km long run"},
+
+    {"d": "2026-12-21", "ph": 1, "wk": 7, "type": "easy", "title": "Easy run", "km": 6},
+    {"d": "2026-12-22", "ph": 1, "wk": 7, "type": "intervals", "title": "3 × 2 km @ 5:30 (5:15), 3 min jog", "km": 6},
+    {"d": "2026-12-23", "ph": 1, "wk": 7, "type": "easy", "title": "Easy run", "km": 5},
+    {"d": "2026-12-24", "ph": 1, "wk": 7, "type": "tempo", "title": "2 km + 4 km @ 5:35 (5:20) + 1 km", "km": 7},
+    {"d": "2026-12-26", "ph": 1, "wk": 7, "type": "long", "title": "Long run", "km": 12},
+
+    {"d": "2026-12-28", "ph": 1, "wk": 8, "type": "easy", "title": "Easy run", "km": 4},
+    {"d": "2026-12-29", "ph": 1, "wk": 8, "type": "intervals", "title": "5 × 400 m @ 1:58, sharp and relaxed", "km": 2},
+    {"d": "2026-12-30", "ph": 1, "wk": 8, "type": "easy", "title": "Easy run", "km": 3},
+    {"d": "2026-12-31", "ph": 1, "wk": 8, "type": "tempo", "title": "15 min easy + 3 × 2 min @ race pace", "km": 3.5},
+    {"d": "2027-01-03", "ph": 1, "wk": 8, "type": "race", "title": "Half marathon race", "km": 21.1, "key": "Half marathon"},
+
+    {"d": "2027-01-05", "ph": 2, "wk": 0, "type": "easy2", "title": "3 km easy (recovery)", "km": 3},
+    {"d": "2027-01-07", "ph": 2, "wk": 0, "type": "easy2", "title": "4 km easy (recovery)", "km": 4},
+    {"d": "2027-01-09", "ph": 2, "wk": 0, "type": "easy2", "title": "5 km easy (recovery)", "km": 5},
+
+    {"d": "2027-01-11", "ph": 2, "wk": 1, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-01-12", "ph": 2, "wk": 1, "type": "intervals", "title": "8 × 200 m @ 36 s, 200 m jog + 6 × 60 m hills", "km": 4.6},
+    {"d": "2027-01-13", "ph": 2, "wk": 1, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-01-14", "ph": 2, "wk": 1, "type": "intervals", "title": "4 × 1 km @ 5:00, 2 min jog", "km": 7},
+    {"d": "2027-01-16", "ph": 2, "wk": 1, "type": "long", "title": "Long run, easy", "km": 10},
+
+    {"d": "2027-01-18", "ph": 2, "wk": 2, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-01-19", "ph": 2, "wk": 2, "type": "intervals", "title": "10 × 200 m @ 35 s + 6 × 60 m hills", "km": 5},
+    {"d": "2027-01-20", "ph": 2, "wk": 2, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-01-21", "ph": 2, "wk": 2, "type": "intervals", "title": "5 × 1 km @ 4:55", "km": 8},
+    {"d": "2027-01-23", "ph": 2, "wk": 2, "type": "long", "title": "Long run, easy", "km": 10},
+
+    {"d": "2027-01-25", "ph": 2, "wk": 3, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-01-26", "ph": 2, "wk": 3, "type": "intervals", "title": "6 × 300 m @ 51 s, 3 min + 6 × 60 m hills", "km": 4.8},
+    {"d": "2027-01-27", "ph": 2, "wk": 3, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-01-28", "ph": 2, "wk": 3, "type": "intervals", "title": "3 × (600 m @ 1:48 + 200 m @ 36), 5 min", "km": 5.4},
+    {"d": "2027-01-30", "ph": 2, "wk": 3, "type": "long", "title": "Long run, easy", "km": 10},
+
+    {"d": "2027-02-01", "ph": 2, "wk": 4, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-02", "ph": 2, "wk": 4, "type": "intervals", "title": "6 × 300 m @ 50 s + 6 × 60 m hills", "km": 4.8},
+    {"d": "2027-02-03", "ph": 2, "wk": 4, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-04", "ph": 2, "wk": 4, "type": "intervals", "title": "5 × 400 m @ 68 s, 3 min", "km": 5},
+    {"d": "2027-02-06", "ph": 2, "wk": 4, "type": "long", "title": "Long run, easy", "km": 8},
+
+    {"d": "2027-02-08", "ph": 2, "wk": 5, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-09", "ph": 2, "wk": 5, "type": "intervals", "title": "8 × 300 m @ 49 s + 6 × 60 m hills", "km": 5.4},
+    {"d": "2027-02-10", "ph": 2, "wk": 5, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-11", "ph": 2, "wk": 5, "type": "intervals", "title": "3 × 600 m @ 1:43, 5 min", "km": 4.8},
+    {"d": "2027-02-13", "ph": 2, "wk": 5, "type": "long", "title": "Long run, easy", "km": 8},
+
+    {"d": "2027-02-15", "ph": 2, "wk": 6, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-16", "ph": 2, "wk": 6, "type": "intervals", "title": "3 × (400 @ 66 + 200 @ 33), 4 min", "km": 4.8},
+    {"d": "2027-02-17", "ph": 2, "wk": 6, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-18", "ph": 2, "wk": 6, "type": "intervals", "title": "2 × (600 @ 1:41 + 200 @ 32), 6 min", "km": 4.6},
+    {"d": "2027-02-20", "ph": 2, "wk": 6, "type": "long", "title": "Long run, easy", "km": 8},
+
+    {"d": "2027-02-22", "ph": 2, "wk": 7, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-23", "ph": 2, "wk": 7, "type": "intervals", "title": "500 m @ 1:24 + 300 @ 49 + 200 @ 31, 5 min", "km": 4},
+    {"d": "2027-02-24", "ph": 2, "wk": 7, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-02-25", "ph": 2, "wk": 7, "type": "intervals", "title": "600 m time trial, all-out (1:38 predicts ≈ 2:12)", "km": 3.6, "key": "600 m time trial"},
+    {"d": "2027-02-27", "ph": 2, "wk": 7, "type": "long", "title": "Long run, easy", "km": 8},
+
+    {"d": "2027-03-01", "ph": 2, "wk": 8, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-03-02", "ph": 2, "wk": 8, "type": "intervals", "title": "4 × 300 m @ 48 s, full recovery", "km": 4.2},
+    {"d": "2027-03-03", "ph": 2, "wk": 8, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-03-04", "ph": 2, "wk": 8, "type": "intervals", "title": "2 × 400 m @ 65 s, 6 min", "km": 3.8},
+    {"d": "2027-03-06", "ph": 2, "wk": 8, "type": "long", "title": "Long run, easy", "km": 6},
+
+    {"d": "2027-03-08", "ph": 2, "wk": 9, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-03-09", "ph": 2, "wk": 9, "type": "intervals", "title": "4 × 200 m @ 32 s, relaxed", "km": 3.8},
+    {"d": "2027-03-10", "ph": 2, "wk": 9, "type": "easy2", "title": "Easy run", "km": 5},
+    {"d": "2027-03-11", "ph": 2, "wk": 9, "type": "intervals", "title": "3 × 150 m strides", "km": 3.5},
+    {"d": "2027-03-14", "ph": 2, "wk": 9, "type": "race", "title": "800 m race (date to confirm)", "km": 3.8, "key": "800 m race"}
+  ]
+}
