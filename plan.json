@@ -4,15 +4,15 @@
   "checkpoint_passed": true,
   "fast_from": "2026-11-26",
   "goals": {
-    "half": {
-      "date": "2027-01-03",
-      "goal": "1:55:00",
-      "note": "1:50–1:52 gets reviewed after the 16 km on 19 Dec"
-    },
     "800": {
       "date": "2027-03-14",
       "goal": "2:15",
       "stretch": "2:10"
+    },
+    "half": {
+      "date": "2027-01-03",
+      "goal": "1:55:00",
+      "note": "1:50–1:52 gets reviewed after the 16 km on 19 Dec"
     }
   },
   "paces": {
