@@ -6,7 +6,7 @@ name: Update dashboard
 
 on:
   schedule:
-    - cron: "17 */3 * * *"   # every 3 hours, at :17 past
+    - cron: "17 */3 * * *"   # every 3 hours, at :17 past (GitHub may run it late)
   workflow_dispatch:          # the "Refresh now" link -> Run workflow
   push:
     branches: [main]
@@ -29,18 +29,15 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  update:
+  build:
     runs-on: ubuntu-latest
     timeout-minutes: 20
-    environment:
-      name: github-pages
-      url: ${{ steps.deploy.outputs.page_url }}
     env:
       TZ: Asia/Kolkata
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@v7
         with:
           python-version: "3.12"
 
@@ -57,11 +54,29 @@ jobs:
       - name: Build public page
         run: python build.py --public
 
-      - uses: actions/configure-pages@v5
+      - uses: actions/configure-pages@v6
 
-      - uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v5
         with:
           path: site
 
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url || steps.retry.outputs.page_url }}
+    steps:
       - id: deploy
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v5
+        continue-on-error: true
+
+      # GitHub sometimes can't see a just-uploaded page yet. Wait and try once more.
+      - name: Wait before retrying
+        if: steps.deploy.outcome == 'failure'
+        run: sleep 30
+
+      - id: retry
+        if: steps.deploy.outcome == 'failure'
+        uses: actions/deploy-pages@v5
