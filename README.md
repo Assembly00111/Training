@@ -35,6 +35,27 @@ that can only edit this repository's contents. It's kept in that browser's
 storage and is only ever sent to GitHub. Without the token, anyone can open the
 editor but nobody can save. **Download** saves a copy of `plan.json` instead.
 
+### Importing a whole new plan from Markdown
+
+On the laptop, drag the plan's `.md` file onto **`import_plan.bat`**. It reads the
+plan twice, independently:
+
+1. **Code** reads every table with a `Week` column and weekday columns (any order or
+   wording), works out the dates, estimates each session's distance, and picks up
+   rules written as sentences ("Weekly layout: Mon easy 5 km…", "Tue, Wed and Sat are
+   optional", "Add 6 × 60 m hill sprints at the end of Tuesday in weeks 1–5").
+2. **A local AI model** ([Ollama](https://ollama.com), `qwen3:8b` by default) reads
+   each week again on its own, plus the goals and checkpoint result.
+
+Then it checks the result: where the two readers disagree, the plan's own weekly
+**Total** column doesn't add up, two sessions land on one day, or a long run jumps
+more than 3 km. A preview page lists every change and anything to check, and nothing
+is saved until you type **y**. The previous plan is backed up to
+`data/plan_backups/`. Saving publishes it like the editor does.
+
+Gym exercise details and the diet section aren't imported; gym days are kept from
+the current plan. Change the model with `"import_model"` in `config.json`.
+
 ## How it works
 
 ```
@@ -50,6 +71,7 @@ Garmin Personal API ──► pull.py ──► data/*.json ──► build.py �
 | `template.html` | The dashboard's layout, styles and charts. |
 | `config.json` | Title, race, units and default look. |
 | `plan.json` | The training plan, session by session, used by the plan vs actual panel. |
+| `plan_import.py`, `import_plan.bat` | Imports a Markdown training plan (code reader + local AI reader + checks + preview). |
 | `.github/workflows/update.yml` | The scheduled job that pulls, builds and publishes. |
 
 ## Privacy
