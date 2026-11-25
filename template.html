@@ -121,6 +121,54 @@ td.r, th.r { text-align:right; }
 .chip { display:inline-block; font-size:10.5px; font-weight:700; text-transform:uppercase; letter-spacing:.04em; padding:1px 6px; border-radius:4px; margin-right:6px; background:var(--card2); color:var(--ink2); vertical-align:1px; }
 .keyrow { display:grid; grid-template-columns:1fr auto; gap:2px 12px; padding:10px 0; border-bottom:1px solid var(--grid); font-size:13px; }
 .keyrow:last-of-type { border-bottom:none; }
+.plan-head { display:flex; justify-content:space-between; align-items:flex-end; gap:12px; flex-wrap:wrap; }
+.plan-head h2 { margin-bottom:4px; }
+.pe-open { font:inherit; font-size:12.5px; font-weight:600; border:1px solid var(--border); background:var(--card); color:var(--ink); padding:7px 14px; border-radius:999px; cursor:pointer; }
+.pe-open:hover { border-color:var(--accent); }
+.notes { margin-top:10px; display:flex; flex-direction:column; gap:8px; }
+dialog#pe { width:min(1000px, calc(100vw - 16px)); max-height:calc(100vh - 32px); padding:0; border:1px solid var(--border); border-radius:var(--radius); background:var(--card); color:var(--ink); }
+dialog#pe::backdrop { background:rgba(0,0,0,.55); }
+.pe-top { position:sticky; top:0; z-index:2; background:var(--card); border-bottom:1px solid var(--grid); padding:14px 18px; display:flex; flex-direction:column; gap:10px; }
+.pe-top .row1 { display:flex; justify-content:space-between; align-items:center; gap:10px; flex-wrap:wrap; }
+.pe-top .row2 { display:flex; gap:8px; align-items:center; flex-wrap:wrap; font-size:12.5px; color:var(--ink2); }
+#pe-body { padding:6px 18px 24px; }
+#pe-body section { padding:14px 0; border-bottom:1px solid var(--grid); }
+#pe-body section:last-child { border-bottom:none; }
+#pe-body h3 { margin-bottom:6px; }
+#pe input, #pe select, #pe textarea { font:inherit; font-size:13px; color:var(--ink); background:var(--card2); border:1px solid var(--border); border-radius:6px; padding:5px 7px; min-width:0; }
+#pe input.bad { border-color:var(--bad); }
+#pe textarea { width:100%; margin-top:6px; resize:vertical; }
+#pe label { display:flex; flex-direction:column; gap:3px; font-size:12px; color:var(--muted); }
+#pe label.pe-chk { flex-direction:row; align-items:center; gap:5px; white-space:nowrap; }
+.pe-grid4 { display:grid; grid-template-columns:repeat(4, minmax(0, 1fr)); gap:10px; margin-top:8px; }
+.pe-grid4 .span2 { grid-column:span 2; }
+.pe-paces { margin-top:12px; } .pe-paces td { padding:4px 6px; } .pe-paces input { width:120px; }
+.pe-week { margin-top:12px; }
+.pe-wkhead { display:flex; align-items:baseline; gap:8px; font-size:13px; margin-bottom:4px; flex-wrap:wrap; }
+.pe-row { display:grid; grid-template-columns:136px 150px minmax(160px, 1fr) 86px auto 170px 30px; gap:6px; align-items:center; padding:4px 0; }
+.pe-km { display:flex; align-items:center; gap:4px; font-size:12px; color:var(--muted); } .pe-km input { width:58px; }
+.pe-gym { display:grid; grid-template-columns:150px 150px 30px; gap:8px; align-items:end; margin-top:10px; padding:10px; background:var(--card2); border-radius:8px; }
+.pe-days { grid-column:1 / -1; display:grid; grid-template-columns:repeat(7, minmax(0, 1fr)); gap:6px; }
+.pe-del { font:inherit; border:none; background:transparent; color:var(--muted); cursor:pointer; font-size:14px; padding:4px; border-radius:6px; }
+.pe-del:hover { color:var(--bad); background:var(--card2); }
+.pe-link { font:inherit; font-size:12px; border:none; background:none; color:var(--accent); cursor:pointer; padding:0; margin-left:auto; }
+.pe-btn { font:inherit; font-size:12.5px; margin-top:12px; border:1px dashed var(--axis); background:transparent; color:var(--ink2); padding:7px 12px; border-radius:8px; cursor:pointer; }
+.pe-primary { font:inherit; font-size:13px; font-weight:650; border:none; background:var(--accent); color:var(--accent-ink); padding:8px 16px; border-radius:999px; cursor:pointer; }
+.pe-secondary { font:inherit; font-size:13px; border:1px solid var(--border); background:var(--card2); color:var(--ink); padding:8px 14px; border-radius:999px; cursor:pointer; }
+.pe-status { font-size:12.5px; min-height:1em; } .pe-status.good { color:var(--good); } .pe-status.bad { color:var(--bad); }
+#pe-token { width:260px; }
+@media (max-width: 760px) {
+  .pe-row { grid-template-columns:1fr 1fr; padding:8px 0; border-bottom:1px solid var(--grid); }
+  .pe-row .pe-title, .pe-row .pe-key { grid-column:1 / -1; }
+  .pe-grid4 { grid-template-columns:1fr 1fr; }
+  .pe-days { grid-template-columns:repeat(4, minmax(0, 1fr)); }
+  #pe-token { width:100%; }
+  .pe-paces { width:100%; table-layout:fixed; } .pe-paces input { width:100%; } .pe-paces th, .pe-paces td { font-size:11.5px; }
+  .pe-gym { grid-template-columns:1fr 1fr 30px; }
+  #pe-body { padding:6px 12px 24px; } .pe-top { padding:12px; }
+}
+#pe { overflow-x:hidden; }
+#pe label > input, #pe label > select { width:100%; box-sizing:border-box; }
 footer { margin-top:40px; color:var(--muted); font-size:12px; text-align:center; }
 @media (max-width: 900px) { .g-hero { grid-template-columns:1fr 1fr; } .g-hero > :first-child { grid-column:1/-1; } .g4 { grid-template-columns:1fr 1fr; } .g3 { grid-template-columns:1fr 1fr; } }
 @media (max-width: 620px) {
@@ -152,7 +200,7 @@ footer { margin-top:40px; color:var(--muted); font-size:12px; text-align:center;
   <section class="grid g4" id="growth" style="margin-top:14px"></section>
 
   <section id="plan-sec" style="display:none">
-    <h2>Plan vs actual</h2>
+    <div class="plan-head"><h2>Plan vs actual</h2><button type="button" class="pe-open" id="plan-edit">✎ Edit plan</button></div>
     <div class="sub" id="plan-sub"></div>
     <div class="grid g4" id="plan-tiles" style="margin-top:12px"></div>
     <div class="grid g2" style="margin-top:14px">
@@ -215,6 +263,18 @@ footer { margin-top:40px; color:var(--muted); font-size:12px; text-align:center;
   <footer id="foot"></footer>
 </div>
 <div id="tip" role="tooltip"></div>
+<dialog id="pe" aria-label="Edit training plan">
+  <div class="pe-top">
+    <div class="row1"><h2 style="margin:0">Edit training plan</h2>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pe-secondary" id="pe-cancel">Close</button><button type="button" class="pe-secondary" id="pe-download">Download</button><button type="button" class="pe-primary" id="pe-save">Save to GitHub</button></div></div>
+    <div class="row2"><input id="pe-token" type="password" autocomplete="off" spellcheck="false" placeholder="GitHub token (only needed to save)" aria-label="GitHub token">
+      <label class="pe-chk"><input type="checkbox" id="pe-remember" checked> Remember on this device</label>
+      <button type="button" class="pe-link" id="pe-forget" style="margin-left:0">Forget token</button>
+      <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent)">Make a token</a></div>
+    <div class="pe-status" id="pe-status" role="status"></div>
+  </div>
+  <div id="pe-body"></div>
+</dialog>
 
 <script>
 const D = /*__DATA__*/null;
@@ -442,7 +502,7 @@ function renderHeader() {
 
 // ---------- hero ----------
 function renderHero() {
-  const race = CFG.race || {}, raceMs = race.date ? P(race.date) : null;
+  const race = {...(CFG.race || {}), ...(PLAN && PLAN.goals.half.date ? {date: PLAN.goals.half.date} : {})}, raceMs = race.date ? P(race.date) : null;
   const daysTo = raceMs != null ? Math.round((raceMs - TODAY) / DAY) : null;
   const r28 = runs.filter(a => within(a, 28));
   const longest28 = maxBy(r28, a => a.dist);
@@ -462,14 +522,15 @@ function renderHero() {
     <div class="card">
       <div class="lab">${esc(race.name || 'Race')} · ${fD(raceMs)}</div>
       <div class="count"><div class="hero-num">${daysTo >= 0 ? daysTo : Math.abs(daysTo)}</div><div class="sub">${daysTo >= 0 ? `days to go<br>${Math.floor(daysTo / 7)} weeks of training left` : 'days since race day'}</div></div>
-      <div style="margin-top:12px;font-size:12.5px;color:var(--ink2)">Longest run, last 4 weeks: <b style="color:var(--ink)">${longest28 ? fN(longest28.dist, 1) : 0} ${U}</b> of an ${fN(target, 0)} ${U} target</div>
+      <div style="margin-top:12px;font-size:12.5px;color:var(--ink2)">Longest run, last 4 weeks: <b style="color:var(--ink)">${longest28 ? fN(longest28.dist, 1) : 0} ${U}</b> of the ${fN(target, 0)} ${U} target</div>
       <div class="meter"><i style="width:${lp}%"></i></div>
       <dl class="kv">
-        ${D.plan ? `<dt>Goal</dt><dd>${D.plan.goals.half.goal.replace(/:00$/, '')} <span class="sub" style="font-weight:400">(A-goal ${D.plan.goals.half.a_goal.replace(/:00$/, '')})</span></dd>` : ''}
+        ${PLAN && PLAN.goals.half.goal ? `<dt>Goal</dt><dd>${esc(PLAN.goals.half.goal.replace(/:00$/, ''))}${PLAN.goals.half.a_goal ? ` <span class="sub" style="font-weight:400">(A-goal ${esc(PLAN.goals.half.a_goal.replace(/:00$/, ''))})</span>` : ''}</dd>` : ''}
         <dt>Avg weekly running, last 4 weeks</dt><dd>${fN(wk4, 1)} ${U}</dd>
         <dt>Predicted finish</dt><dd>${pred ? fDur(pred.t) : '–'}</dd>
         <dt>At pace</dt><dd>${pred ? fPace(pred.t / raceDist) + ' /' + U : '–'}</dd>
       </dl>
+      ${PLAN && PLAN.goals.half.note ? `<div class="sub" style="margin-top:8px;font-size:11.5px;color:var(--ink2)">${esc(PLAN.goals.half.note)}</div>` : ''}
       <div class="sub" style="margin-top:8px;font-size:11.5px">${pred ? `Predicted with the Riegel formula from your ${esc(pred.src)}. It's an estimate and assumes you've built up enough distance.` : 'Run 5 km or more to get a predicted finish time.'}</div>
     </div>`;
 
@@ -509,7 +570,7 @@ function renderHero() {
       <div class="big" style="margin-top:8px">${best90 ? fDur(best90.f1k) : '–'}<small>fastest 1 km</small></div>
       <div>${best90 && bestPrev ? delta(best90.f1k, bestPrev.f1k, {goodUp: false, fmt: v => fN(v, 0), unit: 's', words: ['faster', 'slower']}) + ' <span class="sub">vs the 90 days before</span>' : '<span class="sub">no fast 1 km recorded recently</span>'}</div>
       <dl class="kv">
-        ${D.plan ? `<dt>800m goal · ${fDs(P(D.plan.goals['800'].date))}</dt><dd>${D.plan.goals['800'].goal} <span class="sub" style="font-weight:400">(stretch ${D.plan.goals['800'].stretch})</span></dd>` : ''}
+        ${PLAN && PLAN.goals['800'].goal ? `<dt>800m goal · ${fDs(P(PLAN.goals['800'].date))}</dt><dd>${esc(PLAN.goals['800'].goal)}${PLAN.goals['800'].stretch ? ` <span class="sub" style="font-weight:400">(stretch ${esc(PLAN.goals['800'].stretch)})</span>` : ''}</dd>` : ''}
         <dt>Rough 800m equivalent</dt><dd>${est800 ? fDur(est800) : '–'}</dd>
         <dt>All-time fastest 1 km</dt><dd>${bestAll ? fDur(bestAll.f1k) : '–'}</dd>
         <dt>Peak speed</dt><dd>${peak90 ? fN(peakKmh(peak90), 1) + ' km/h' : '–'}</dd>
@@ -691,13 +752,14 @@ function renderRecent() {
 }
 
 // ---------- plan vs actual ----------
-const PLAN = D.plan || null;
+let PLAN = D.plan || null;
+let PLAN_ORIG = JSON.stringify(PLAN);
 const TYPE_LABEL = {easy: 'Easy', easy2: 'Easy', long: 'Long', tempo: 'Tempo', intervals: 'Speed', race: 'Race'};
 const DOW = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 const dowOf = ms => DOW[(new Date(ms).getUTCDay() + 6) % 7];
 function planTarget(s) {
   const p = PLAN.paces[s.type]; if (!p) return null;
-  const fast = PLAN.checkpoint_passed === true && s.ph === 1 && s.wk >= 6;
+  const fast = PLAN.checkpoint_passed === true && (PLAN.fast_from ? s.ms >= P(PLAN.fast_from) : (s.ph === 1 && s.wk >= 6));
   return fast ? p.p155 : p.p200;
 }
 function verdict(s) {
@@ -719,7 +781,11 @@ function verdict(s) {
   return {k, t, i, notes};
 }
 function matchPlan() {
-  const S = PLAN.sessions.map(s => ({...s, ms: P(s.d), wkMs: weekOf(P(s.d)), match: null}));
+  const S = PLAN.sessions.map(s => {
+    const ms = P(s.d), ph = PLAN.phases.find(p => ms >= P(p.from) && ms <= P(p.to));
+    const wk = ph ? (ph.first_week ?? 1) + Math.round((weekOf(ms) - weekOf(P(ph.from))) / (7 * DAY)) : s.wk;
+    return {...s, ms, wkMs: weekOf(ms), ph: ph ? ph.n : s.ph, wk, match: null};
+  });
   const start = P(PLAN.start), end = Math.max(...S.map(s => s.ms));
   const pr = runs.filter(a => a.ms >= start && a.ms <= end + DAY).sort((a, b) => b.dist - a.dist);
   const used = new Set();
@@ -796,8 +862,9 @@ function renderPlan() {
     const res = a ? `${fN(a.dist, 2)} ${U} · ${fDur(a.sec)} · ${fPace(a.pace)} /${U}` : s.ms >= TODAY ? daysTo(s.ms) : '';
     return `<div class="keyrow"><div><b>${esc(s.key)}</b><div class="sub">${dowOf(s.ms)} ${fD(s.ms)} · ${esc(s.title)}</div>${res ? `<div class="sub" style="color:var(--ink2)">${res}</div>` : ''}</div><div>${pill(s.v)}</div></div>`;
   }).join('') + (cp ? `<div class="note" style="margin-top:10px">${PLAN.checkpoint_passed == null
-      ? `After the checkpoint tempo on ${dowOf(cp.ms)} ${fDs(cp.ms)}, tell Claude whether you passed. If you did, weeks 6–8 switch to the 1:55 paces.`
-      : PLAN.checkpoint_passed ? 'Checkpoint passed: weeks 6–8 use the 1:55 paces.' : 'Checkpoint not passed: 2:00 stays the goal.'}</div>` : '');
+      ? `After the checkpoint tempo on ${dowOf(cp.ms)} ${fDs(cp.ms)}, open Edit plan and record whether you passed.`
+      : PLAN.checkpoint_passed ? `Checkpoint passed: 1:55 paces${PLAN.fast_from ? ` from ${fDs(P(PLAN.fast_from))}` : ''}.` : 'Checkpoint not passed: 2:00 stays the goal.'}</div>` : '')
+    + ((PLAN.notes || []).length ? `<div class="notes">${PLAN.notes.map(n => `<div class="note">${esc(n)}</div>`).join('')}</div>` : '');
 
   // weekly planned vs actual
   const weeks = []; for (let w = weekOf(start); w <= weekOf(end); w += 7 * DAY) weeks.push(w);
@@ -824,7 +891,7 @@ function renderPlan() {
   PLAN.phases.forEach(p => {
     const k = p.n === 1 ? 'easy' : 'easy2';
     if (p.n === 1 && PLAN.checkpoint_passed === true) {
-      const w6 = P('2026-12-14');
+      const w6 = PLAN.fast_from ? P(PLAN.fast_from) : P(p.from) + 35 * DAY;
       bands.push({x0: P(p.from), x1: w6, y0: PLAN.paces.easy.p200[0], y1: PLAN.paces.easy.p200[1]});
       bands.push({x0: w6, x1: P(p.to), y0: PLAN.paces.easy.p155[0], y1: PLAN.paces.easy.p155[1]});
     } else bands.push({x0: P(p.from), x1: P(p.to), y0: PLAN.paces[k].p200[0], y1: PLAN.paces[k].p200[1]});
@@ -876,6 +943,218 @@ function planBars(box, o) {
   hit.addEventListener('pointerleave', () => { hover.setAttribute('opacity', 0); hideTip(); });
 }
 
+// ---------- plan editor ----------
+// Edits the training plan in the page and saves plan.json to GitHub with the
+// owner's fine-grained token (kept only in this browser's storage).
+const PE_TYPES = [['easy', 'Easy (Phase 1)'], ['easy2', 'Easy (Phase 2)'], ['long', 'Long run'], ['tempo', 'Tempo'], ['intervals', 'Speed / intervals'], ['race', 'Race']];
+const PE_DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+const PE_TOKEN_KEY = 'gh-plan-token';
+let draft = null;
+const peEl = () => document.getElementById('pe');
+const mss = s => { const m = String(s).trim().match(/^(\d{1,2}):(\d{2})$/); return m ? +m[1] * 60 + +m[2] : null; };
+const rngTxt = a => Array.isArray(a) ? `${fPace(a[0])}–${fPace(a[1])}` : '';
+const parseRng = s => { const p = String(s).split(/\s*[–-]\s*/).map(mss); return p.length === 2 && p.every(v => v != null) ? p.sort((a, b) => a - b) : null; };
+const isDate = s => /^\d{4}-\d{2}-\d{2}$/.test(s || '') && !isNaN(P(s));
+const att = v => esc(v == null ? '' : v);
+function readToken() { try { return localStorage.getItem(PE_TOKEN_KEY) || ''; } catch (e) { return ''; } }
+function writeToken(t) { try { t ? localStorage.setItem(PE_TOKEN_KEY, t) : localStorage.removeItem(PE_TOKEN_KEY); } catch (e) {} }
+
+function blankPlan() {
+  return {name: 'Training plan', start: iso(TODAY), checkpoint_passed: null, fast_from: null,
+    goals: {half: {date: iso(TODAY + 60 * DAY), goal: '', note: ''}, '800': {date: iso(TODAY + 120 * DAY), goal: '', stretch: ''}},
+    paces: {easy: {p200: [390, 420], p155: [375, 405]}, long: {p200: [375, 405], p155: [360, 390]}, tempo: {p200: [335, 345], p155: [320, 330]}, easy2: {p200: [360, 390], p155: [360, 390]}},
+    cadence_target: [165, 170], phases: [{n: 1, name: 'Phase 1', from: iso(TODAY), to: iso(TODAY + 60 * DAY), first_week: 1}],
+    gym: [], notes: [], sessions: []};
+}
+function iso(ms) { return new Date(ms).toISOString().slice(0, 10); }
+
+function setPath(obj, path, val, optional) {
+  const ks = path.split('.'); let o = obj;
+  ks.slice(0, -1).forEach(k => { if (o[k] == null) o[k] = {}; o = o[k]; });
+  const last = ks[ks.length - 1];
+  if (optional && (val === '' || val === false || val == null)) delete o[last]; else o[last] = val;
+}
+
+function openEditor() {
+  draft = JSON.parse(JSON.stringify(PLAN || blankPlan()));
+  draft.sessions.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  draft.notes = draft.notes || []; draft.gym = draft.gym || [];
+  renderEditor();
+  peStatus('');
+  const d = peEl(); if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+}
+function closeEditor() { const d = peEl(); if (d.close) d.close(); else d.removeAttribute('open'); }
+
+function renderEditor() {
+  const g = draft.goals, h = g.half || {}, e = g['800'] || {};
+  const sel = (k, v) => `<select data-k="${k}">${PE_TYPES.map(([t, n]) => `<option value="${t}"${t === v ? ' selected' : ''}>${n}</option>`).join('')}</select>`;
+  // sessions grouped by week
+  const idx = draft.sessions.map((s, i) => i);
+  const byWeek = new Map();
+  idx.forEach(i => { const s = draft.sessions[i]; const w = isDate(s.d) ? weekOf(P(s.d)) : 0; if (!byWeek.has(w)) byWeek.set(w, []); byWeek.get(w).push(i); });
+  const weeksHtml = [...byWeek.entries()].sort((a, b) => a[0] - b[0]).map(([w, list]) => {
+    const ph = w ? phaseInfo(w + 3 * DAY) : null;
+    return `<div class="pe-week"><div class="pe-wkhead"><b>${w ? `Week of ${fD(w)}` : 'No date'}</b>${ph ? ` <span class="muted">· Phase ${ph.ph}, week ${ph.wk}</span>` : ''}
+      <button type="button" class="pe-link" data-add="${w}">+ Add session</button></div>
+      ${list.map(i => { const s = draft.sessions[i]; return `<div class="pe-row">
+        <input type="date" data-k="sessions.${i}.d" value="${att(s.d)}" aria-label="Date">
+        ${sel(`sessions.${i}.type`, s.type)}
+        <input class="pe-title" data-k="sessions.${i}.title" value="${att(s.title)}" placeholder="What to run" aria-label="Session">
+        <span class="pe-km"><input type="number" step="0.1" min="0" data-k="sessions.${i}.km" data-num value="${att(s.km)}" aria-label="Distance"> km</span>
+        <label class="pe-chk"><input type="checkbox" data-k="sessions.${i}.optional" data-opt${s.optional ? ' checked' : ''}> optional</label>
+        <input class="pe-key" data-k="sessions.${i}.key" data-opt value="${att(s.key)}" placeholder="Milestone name (optional)" aria-label="Milestone">
+        <button type="button" class="pe-del" data-del="${i}" aria-label="Delete session">✕</button></div>`; }).join('')}</div>`;
+  }).join('');
+  const paceRow = (k, label) => { const p = draft.paces[k] || {}; return `<tr><td>${label}</td>
+    <td><input data-k="paces.${k}.p200" data-rng value="${att(rngTxt(p.p200))}" placeholder="6:30–7:00"></td>
+    <td><input data-k="paces.${k}.p155" data-rng value="${att(rngTxt(p.p155))}" placeholder="6:15–6:45"></td></tr>`; };
+  const gymHtml = draft.gym.map((b, i) => `<div class="pe-gym">
+      <label>From <input type="date" data-k="gym.${i}.from" value="${att(b.from)}"></label>
+      <label>To <input type="date" data-k="gym.${i}.to" value="${att(b.to)}"></label>
+      <button type="button" class="pe-del" data-delgym="${i}" aria-label="Delete gym block">✕</button>
+      <div class="pe-days">${PE_DAYS.map(d => `<label>${d}<input data-k="gym.${i}.days.${d}" data-opt value="${att((b.days || {})[d])}" placeholder="—"></label>`).join('')}</div></div>`).join('');
+  const phasesHtml = draft.phases.map((p, i) => `<div class="pe-grid4">
+      <label>Phase ${p.n} name<input data-k="phases.${i}.name" value="${att(p.name)}"></label>
+      <label>From<input type="date" data-k="phases.${i}.from" value="${att(p.from)}"></label>
+      <label>To<input type="date" data-k="phases.${i}.to" value="${att(p.to)}"></label>
+      <label>First week number<input type="number" min="0" data-k="phases.${i}.first_week" data-num value="${att(p.first_week ?? 1)}"></label></div>`).join('');
+
+  document.getElementById('pe-body').innerHTML = `
+    <section><h3>Goals</h3>
+      <div class="pe-grid4">
+        <label>Half marathon date<input type="date" data-k="goals.half.date" value="${att(h.date)}"></label>
+        <label>Half marathon goal<input data-k="goals.half.goal" value="${att(h.goal)}" placeholder="1:55:00"></label>
+        <label class="span2">Goal note<input data-k="goals.half.note" data-opt value="${att(h.note)}" placeholder="e.g. 1:50–1:52 reviewed after the 16 km"></label>
+        <label>800m race date<input type="date" data-k="goals.800.date" value="${att(e.date)}"></label>
+        <label>800m goal<input data-k="goals.800.goal" value="${att(e.goal)}" placeholder="2:15"></label>
+        <label>800m stretch goal<input data-k="goals.800.stretch" data-opt value="${att(e.stretch)}" placeholder="2:10"></label>
+      </div></section>
+    <section><h3>Checkpoint and paces</h3>
+      <div class="pe-grid4">
+        <label>Checkpoint<select data-k="checkpoint_passed" data-tri>
+          <option value=""${draft.checkpoint_passed == null ? ' selected' : ''}>Not run yet</option>
+          <option value="true"${draft.checkpoint_passed === true ? ' selected' : ''}>Passed</option>
+          <option value="false"${draft.checkpoint_passed === false ? ' selected' : ''}>Not passed</option></select></label>
+        <label>Faster paces start on<input type="date" data-k="fast_from" data-opt value="${att(draft.fast_from)}"></label>
+        <label>Cadence target, low<input type="number" data-k="cadence_target.0" data-num value="${att(draft.cadence_target[0])}"></label>
+        <label>Cadence target, high<input type="number" data-k="cadence_target.1" data-num value="${att(draft.cadence_target[1])}"></label>
+      </div>
+      <table class="pe-paces"><thead><tr><th>Pace range (min:sec per km)</th><th>Before checkpoint</th><th>After passing it</th></tr></thead><tbody>
+        ${paceRow('easy', 'Easy run (Phase 1)')}${paceRow('long', 'Long run')}${paceRow('tempo', 'Tempo')}${paceRow('easy2', 'Easy run (Phase 2)')}</tbody></table></section>
+    <section><h3>Coach notes</h3><div class="sub">One note per line. Shown under Key sessions.</div>
+      <textarea data-k="notes" data-lines rows="4">${esc(draft.notes.join('\n'))}</textarea></section>
+    <section><h3>Sessions</h3><div class="sub">Change a date to move a session; it regroups when you leave the box. Distances are in km.</div>
+      ${weeksHtml || '<div class="muted">No sessions yet.</div>'}
+      <button type="button" class="pe-btn" data-add="new">+ Add a session on a new date</button></section>
+    <section><h3>Gym days</h3><div class="sub">Shown as reminders in the week view. Leave a day empty for no gym.</div>
+      ${gymHtml}<button type="button" class="pe-btn" data-addgym>+ Add gym block</button></section>
+    <section><h3>Phases and plan</h3>
+      <div class="pe-grid4"><label class="span2">Plan name<input data-k="name" value="${att(draft.name)}"></label>
+        <label>Plan start date<input type="date" data-k="start" value="${att(draft.start)}"></label></div>
+      ${phasesHtml}</section>`;
+  const tok = document.getElementById('pe-token'); if (tok && !tok.value) tok.value = readToken();
+}
+
+function phaseInfo(ms) {
+  const p = (draft || PLAN).phases.find(p => isDate(p.from) && ms >= P(p.from) && ms <= P(p.to) + DAY);
+  return p ? {ph: p.n, wk: (p.first_week ?? 1) + Math.round((weekOf(ms) - weekOf(P(p.from))) / (7 * DAY))} : null;
+}
+
+function peStatus(msg, kind) { const s = document.getElementById('pe-status'); s.textContent = msg; s.className = 'pe-status ' + (kind || ''); }
+
+function validatePlan(p) {
+  for (const [k, v] of [['plan start', p.start], ['half marathon date', p.goals.half.date], ['800m race date', p.goals['800'].date]]) if (!isDate(v)) return `Check the ${k}.`;
+  for (const ph of p.phases) if (!isDate(ph.from) || !isDate(ph.to) || ph.from > ph.to) return `Check the dates of Phase ${ph.n}.`;
+  for (const b of p.gym) if (!isDate(b.from) || !isDate(b.to)) return 'A gym block is missing a date.';
+  for (const k of ['easy', 'long', 'tempo', 'easy2']) for (const c of ['p200', 'p155']) if (!Array.isArray(p.paces[k][c])) return `Check the ${k} pace range (use the form 6:15–6:45).`;
+  if (!(p.cadence_target[0] > 0 && p.cadence_target[1] >= p.cadence_target[0])) return 'Check the cadence target.';
+  for (const s of p.sessions) {
+    if (!isDate(s.d)) return 'A session is missing its date.';
+    if (!String(s.title || '').trim()) return `The session on ${s.d} needs a description.`;
+    if (!(s.km >= 0)) return `The session on ${s.d} needs a distance.`;
+  }
+  return null;
+}
+
+function b64utf8(str) { const bytes = new TextEncoder().encode(str); let bin = ''; for (let i = 0; i < bytes.length; i += 0x8000) bin += String.fromCharCode.apply(null, bytes.subarray(i, i + 0x8000)); return btoa(bin); }
+function utf8b64(b) { const bin = atob(b.replace(/\s/g, '')); return new TextDecoder().decode(Uint8Array.from(bin, c => c.charCodeAt(0))); }
+
+function applyDraft() {
+  draft.sessions.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+  draft.notes = draft.notes.filter(n => n.trim());
+  PLAN = JSON.parse(JSON.stringify(draft)); D.plan = PLAN;
+  renderAll();
+}
+
+async function savePlan(where) {
+  const err = validatePlan(draft); if (err) { peStatus(err, 'bad'); return; }
+  applyDraft();
+  const json = JSON.stringify(PLAN, null, 2) + '\n';
+  if (where === 'download') {
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([json], {type: 'application/json'})); a.download = 'plan.json'; a.click();
+    peStatus('Downloaded plan.json. Your dashboard here already shows the changes.', 'good'); return;
+  }
+  if (!CFG.repo) { peStatus('No GitHub repository is set in config.json. Use Download instead.', 'bad'); return; }
+  const tokEl = document.getElementById('pe-token'); const token = tokEl.value.trim();
+  if (!token) { peStatus('Paste your GitHub token first (see the link next to the box).', 'bad'); tokEl.focus(); return; }
+  if (document.getElementById('pe-remember').checked) writeToken(token); else writeToken('');
+  const api = `https://api.github.com/repos/${CFG.repo}/contents/plan.json`;
+  const hdr = {Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28'};
+  const why = r => r.status === 401 ? 'GitHub says the token is wrong or has expired.' : (r.status === 403 || r.status === 404) ? "The token doesn't have permission to change this repository's contents." : `GitHub returned an error (${r.status}).`;
+  peStatus('Saving to GitHub…');
+  try {
+    const cur = await fetch(`${api}?ref=main&t=${Date.now()}`, {headers: hdr, cache: 'no-store'});
+    if (!cur.ok && cur.status !== 404) throw new Error(why(cur));
+    let sha;
+    if (cur.ok) {
+      const body = await cur.json(); sha = body.sha;
+      let remote = null; try { remote = JSON.stringify(JSON.parse(utf8b64(body.content))); } catch (e) {}
+      if (remote && remote !== PLAN_ORIG && remote !== JSON.stringify(PLAN) &&
+          !confirm('The plan on GitHub changed after this page was built (maybe you edited it on another device). Save your version over it?')) { peStatus('Not saved.', 'bad'); return; }
+    }
+    const res = await fetch(api, {method: 'PUT', headers: {...hdr, 'Content-Type': 'application/json'},
+      body: JSON.stringify({message: 'Update training plan from the dashboard', content: b64utf8(json), sha, branch: 'main'})});
+    if (!res.ok) throw new Error(why(res));
+    PLAN_ORIG = JSON.stringify(PLAN);
+    peStatus('Saved to GitHub. The live site rebuilds itself in about 2 minutes.', 'good');
+  } catch (e) {
+    peStatus((e && e.message && !/fetch/i.test(e.message)) ? e.message : "Couldn't reach GitHub. Check your internet connection.", 'bad');
+  }
+}
+
+function wireEditor() {
+  const d = peEl();
+  document.getElementById('plan-edit').addEventListener('click', openEditor);
+  d.addEventListener('input', ev => {
+    const t = ev.target, k = t.dataset.k; if (!k) return;
+    let v = t.type === 'checkbox' ? t.checked : t.value;
+    if ('num' in t.dataset) v = v === '' ? null : +v;
+    if ('tri' in t.dataset) v = v === '' ? null : v === 'true';
+    if ('lines' in t.dataset) v = v.split('\n');
+    if ('rng' in t.dataset) { const r = parseRng(v); t.classList.toggle('bad', !r); if (!r) return; v = r; }
+    setPath(draft, k, v, 'opt' in t.dataset);
+  });
+  d.addEventListener('change', ev => { if (ev.target.type === 'date' && /^sessions\./.test(ev.target.dataset.k || '')) { draft.sessions.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0); renderEditor(); } });
+  d.addEventListener('click', ev => {
+    const t = ev.target.closest('button'); if (!t) return;
+    if (t.dataset.del != null) { draft.sessions.splice(+t.dataset.del, 1); renderEditor(); }
+    else if (t.dataset.delgym != null) { draft.gym.splice(+t.dataset.delgym, 1); renderEditor(); }
+    else if ('addgym' in t.dataset) { draft.gym.push({from: iso(TODAY), to: iso(TODAY + 27 * DAY), days: {}}); renderEditor(); }
+    else if (t.dataset.add != null) {
+      const w = t.dataset.add === 'new' ? null : +t.dataset.add;
+      const inWeek = w ? draft.sessions.filter(s => isDate(s.d) && weekOf(P(s.d)) === w).map(s => P(s.d)) : [];
+      const last = draft.sessions.length ? P(draft.sessions[draft.sessions.length - 1].d) : TODAY;
+      const day = w ? Math.min(w + 6 * DAY, (inWeek.length ? Math.max(...inWeek) : w - DAY) + DAY) : last + DAY;
+      draft.sessions.push({d: iso(day), type: 'easy', title: 'Easy run', km: 5});
+      draft.sessions.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0); renderEditor();
+    }
+  });
+  document.getElementById('pe-save').addEventListener('click', () => savePlan('github'));
+  document.getElementById('pe-download').addEventListener('click', () => savePlan('download'));
+  document.getElementById('pe-cancel').addEventListener('click', closeEditor);
+  document.getElementById('pe-forget').addEventListener('click', () => { writeToken(''); document.getElementById('pe-token').value = ''; peStatus('Token removed from this device.'); });
+}
+
 // ---------- wiring ----------
 function renderAll() { renderHeader(); renderHero(); renderPlan(); renderWeeks(); renderTrends(); renderYoY(); renderRecovery(); renderRecords(); renderRecent(); }
 function setTheme(t) {
@@ -892,6 +1171,7 @@ document.querySelectorAll('#range button').forEach(b => b.addEventListener('clic
   rangeDays = +b.dataset.r; document.querySelectorAll('#range button').forEach(x => x.setAttribute('aria-pressed', x === b)); renderTrends(); }));
 document.querySelectorAll('#pw-nav button').forEach(b => b.addEventListener('click', () => {
   const n = +b.dataset.n; planWeekOffset = n === 0 ? 0 : planWeekOffset + n; renderPlan(); }));
+wireEditor();
 let rt; let lastW = innerWidth;
 addEventListener('resize', () => { if (innerWidth === lastW) return; lastW = innerWidth; clearTimeout(rt); rt = setTimeout(renderAll, 150); });
 addEventListener('scroll', hideTip, {passive: true});

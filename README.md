@@ -22,6 +22,19 @@ about 3 minutes.
 Four looks (Watch, Log, Race day, Trail), hover or tap for exact numbers, and it
 works on a phone.
 
+## Editing the training plan
+
+Click **✎ Edit plan** in the Plan vs actual section. You can change goals, the
+checkpoint result, pace ranges, the cadence target, coach notes, every session
+(date, type, description, distance, optional, milestone) and the gym days, and
+add or delete sessions. Changes show on the page straight away.
+
+**Save to GitHub** writes `plan.json` to this repository, and the live page
+rebuilds itself about 2 minutes later. Saving needs a fine-grained GitHub token
+that can only edit this repository's contents. It's kept in that browser's
+storage and is only ever sent to GitHub. Without the token, anyone can open the
+editor but nobody can save. **Download** saves a copy of `plan.json` instead.
+
 ## How it works
 
 ```

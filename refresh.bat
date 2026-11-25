@@ -3,6 +3,8 @@ rem Pull new Garmin data and rebuild your local dashboard.
 rem (The public site updates itself on GitHub every 3 hours.)
 cd /d "%~dp0"
 echo.
+rem Fetch any plan changes saved from the dashboard's Edit plan button.
+git pull --ff-only -q 2>nul || echo (Couldn't fetch plan changes from GitHub; using the local plan.)
 python pull.py
 if errorlevel 1 (
   echo.
