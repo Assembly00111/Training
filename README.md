@@ -53,8 +53,17 @@ more than 3 km. A preview page lists every change and anything to check, and not
 is saved until you type **y**. The previous plan is backed up to
 `data/plan_backups/`. Saving publishes it like the editor does.
 
+The second reader can instead be **NVIDIA's free cloud API** (build.nvidia.com,
+`nvidia/nemotron-3-ultra-550b-a55b` by default): about 10 minutes instead of an hour.
+Put `NVIDIA_API_KEY=nvapi-…` in `.env.local` and the importer asks which one to use
+each time (or pass `--local` / `--nvidia`). Only the week tables and the goal,
+checkpoint and cadence lines are sent, with the runner's name replaced; the diet
+section and Garmin data never leave the laptop. NVIDIA's trial terms allow it to use
+what's sent to improve its products.
+
 Gym exercise details and the diet section aren't imported; gym days are kept from
-the current plan. Change the model with `"import_model"` in `config.json`.
+the current plan. Settings in `config.json`: `"import_model"` (local model),
+`"import_nvidia_model"`, and `"import_ai"` (`"local"` or `"nvidia"`, the default choice).
 
 ## How it works
 

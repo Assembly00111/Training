@@ -16,6 +16,7 @@ plan.json saved to your GitHub repository.
 """
 import html
 import json
+import os
 import re
 import subprocess
 import sys
@@ -403,7 +404,56 @@ def ollama_up():
         return False
 
 
+NVIDIA = "https://integrate.api.nvidia.com/v1/chat/completions"
+NVIDIA_DEFAULT_MODEL = "nvidia/nemotron-3-ultra-550b-a55b"
+PRIVACY_NAME = None   # the runner's name, taken from the plan title and swapped out before anything is sent to NVIDIA
+
+
+def nvidia_key():
+    """NVIDIA_API_KEY from the environment or .env.local. Never printed."""
+    k = os.environ.get("NVIDIA_API_KEY", "").strip()
+    if k:
+        return k
+    env = ROOT / ".env.local"
+    if env.exists():
+        for ln in env.read_text(encoding="utf-8").splitlines():
+            if ln.strip().startswith("NVIDIA_API_KEY="):
+                return ln.split("=", 1)[1].strip().strip('"').strip("'")
+    return ""
+
+
+def ask_nvidia(model, prompt, schema, timeout=180):
+    if PRIVACY_NAME:
+        prompt = re.sub(rf"\b{re.escape(PRIVACY_NAME)}\b('s)?", "the runner", prompt, flags=re.I)
+    body = {"model": model, "temperature": 0, "max_tokens": 2048,
+            "messages": [{"role": "system", "content": "Answer with JSON only, matching this JSON schema:\n" + json.dumps(schema)},
+                         {"role": "user", "content": prompt}],
+            "response_format": {"type": "json_schema", "json_schema": {"name": "answer", "schema": schema}}}
+    req = urllib.request.Request(NVIDIA, data=json.dumps(body).encode(),
+                                 headers={"Content-Type": "application/json", "Accept": "application/json",
+                                          "Authorization": "Bearer " + nvidia_key()})
+    for attempt in range(5):
+        try:
+            with urllib.request.urlopen(req, timeout=timeout) as r:
+                text = json.loads(r.read())["choices"][0]["message"]["content"] or ""
+            break
+        except urllib.error.HTTPError as e:
+            if e.code in (401, 403):
+                raise SystemExit("\n\n  NVIDIA refused the key (HTTP %d). Check NVIDIA_API_KEY in .env.local, or run with --local." % e.code)
+            if e.code == 404:
+                raise SystemExit(f"\n\n  NVIDIA doesn't offer the model '{model}'. Change \"import_nvidia_model\" in config.json.")
+            if e.code in (429, 500, 502, 503, 504) and attempt < 4:
+                time.sleep(5 * (attempt + 1))
+                continue
+            raise
+    text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
+    m = re.search(r"\{.*\}", text, re.S)
+    return json.loads(m.group(0) if m else text)
+
+
 def ask_ai(model, prompt, schema, num_ctx=8192, timeout=1800, think=True):
+    if model.startswith("nvidia:"):
+        return ask_nvidia(model[len("nvidia:"):], prompt, schema)
     body = {"model": model, "prompt": prompt, "format": schema, "stream": False, "think": think,
             "options": {"temperature": 0, "num_ctx": num_ctx}}
     req = urllib.request.Request(OLLAMA + "/api/generate", data=json.dumps(body).encode(), headers={"Content-Type": "application/json"})
@@ -720,6 +770,23 @@ def main():
     except Exception:
         pass
     model = cfg.get("import_model", "qwen3:8b")
+    global PRIVACY_NAME
+    t = re.search(r"^#\s*([A-Z][\w-]+)['’]s\b", md, re.M)
+    PRIVACY_NAME = t.group(1) if t else None
+
+    # Which second reader: --local / --nvidia, else ask (when a key is set), else config "import_ai".
+    backend = "nvidia" if "--nvidia" in sys.argv else "local" if "--local" in sys.argv else None
+    has_key = bool(nvidia_key())
+    if backend is None:
+        backend = cfg.get("import_ai", "local")
+        if has_key and sys.stdin.isatty() and "--dry-run" not in sys.argv:
+            print("\nWhich AI should double-check the plan?")
+            print("  1  Local qwen3 on this laptop: private, about an hour")
+            print("  2  NVIDIA (cloud, free): a minute or two; sends the plan's week tables and goal lines, not your name or diet")
+            pick = input(f"Type 1 or 2 (Enter = {'2' if backend == 'nvidia' else '1'}): ").strip()
+            backend = "nvidia" if pick == "2" else "local" if pick == "1" else backend
+    if backend == "nvidia":
+        model = "nvidia:" + cfg.get("import_nvidia_model", NVIDIA_DEFAULT_MODEL)
 
     print(f"\nImporting {src.name}\n")
     pulled = git("pull", "--ff-only", "-q")
@@ -739,7 +806,10 @@ def main():
     ai_settings = None
     if "--no-ai" in sys.argv:
         flags.append(("warn", "Second reader switched off (--no-ai): only the code reader and rule checks were used."))
-    elif not ollama_up():
+    elif backend == "nvidia" and not has_key:
+        flags.append(("attn", "NVIDIA was chosen but NVIDIA_API_KEY isn't set in .env.local, so there was no second reader."))
+        print("  Second reader   No NVIDIA key in .env.local. Continuing with code and rule checks only.")
+    elif backend == "local" and not ollama_up():
         flags.append(("attn", "Ollama isn't running, so there was no second reader. Start Ollama and import again for the full check."))
         print("  Second reader   Ollama isn't running. Continuing with code and rule checks only.")
     else:
