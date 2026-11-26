@@ -37,14 +37,35 @@ editor but nobody can save. **Download** saves a copy of `plan.json` instead.
 
 ### Importing a whole new plan from Markdown
 
-**On the site (any device):** in the editor, click **⇪ Import .md** and pick the plan
-file. It's encrypted in the browser before upload (AES-256-GCM, with the key wrapped
-by the RSA public key in `config.json`), so this public repo only ever holds
-ciphertext in `imports/request.json`. The **Import plan** workflow decrypts it with the
-`PLAN_IMPORT_PRIVATE_KEY` secret, reads it with code plus NVIDIA's AI
-(`NVIDIA_API_KEY` secret), and commits only the result to `imports/result.json`. After
-about 10 minutes the editor shows what changed and anything to check. **Load into
+**On the site (any device):** in the editor, click **⇪ Import .md**, pick the plan
+file, and choose who double-checks it:
+
+- **NVIDIA (cloud):** about 10 minutes, works anytime.
+- **My laptop (local qwen3):** about an hour, private. The laptop must be on, with
+  **`start_worker.bat`** open and Ollama running.
+
+When it's done, the editor shows what changed and anything to check. **Load into
 editor**, look it over, then **Save to GitHub**. Nothing changes until you save.
+
+How it works: GitHub is the job queue, and there are two workers.
+
+```
+browser ── encrypts .md ──► imports/request.json ──┬─ engine "nvidia" ─► Import plan workflow (GitHub)
+           (public key for                         │
+            the chosen worker)                     └─ engine "local" ──► plan_worker.py (laptop)
+                                                                              │
+editor ◄── polls ── imports/result.json ◄── {status: "running"}, then the result ┘
+```
+
+- The file is encrypted in the browser (AES-256-GCM, with the key wrapped by RSA), so
+  this public repo only ever holds ciphertext. Each worker has its own key pair: the
+  GitHub job's private key is the `PLAN_IMPORT_PRIVATE_KEY` secret, and the laptop's is
+  `PLAN_IMPORT_LOCAL_PRIVATE_KEY` in `.env.local`. The public keys are in `config.json`.
+- Only the result (the new plan, the changes and anything to check) is committed. The
+  decrypted file is deleted after reading.
+- The laptop worker checks GitHub every 30 seconds, works in its own copy of the repo
+  (`data/worker-repo`), and posts a "running" status when it starts. If it doesn't pick
+  an upload up within 2 minutes, the editor offers to send it to NVIDIA instead.
 
 **On the laptop:** drag the plan's `.md` file onto **`import_plan.bat`**. It reads the
 plan twice, independently:
@@ -91,7 +112,8 @@ Garmin Personal API ──► pull.py ──► data/*.json ──► build.py �
 | `plan.json` | The training plan, session by session, used by the plan vs actual panel. |
 | `plan_import.py`, `import_plan.bat` | Imports a Markdown training plan (code reader + local AI reader + checks + preview). |
 | `.github/workflows/update.yml` | The scheduled job that pulls, builds and publishes. |
-| `.github/workflows/import-plan.yml`, `.github/scripts/decrypt_plan.mjs` | Imports a plan uploaded from the site (decrypt, read, check, write the result). |
+| `.github/workflows/import-plan.yml`, `.github/scripts/decrypt_plan.mjs` | Imports a plan uploaded from the site for NVIDIA (decrypt, read, check, write the result). |
+| `plan_worker.py`, `start_worker.bat` | The laptop worker: reads uploads sent to "My laptop" with the local AI. |
 
 ## Privacy
 
