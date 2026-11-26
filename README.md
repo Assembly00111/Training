@@ -41,8 +41,10 @@ editor but nobody can save. **Download** saves a copy of `plan.json` instead.
 file, and choose who double-checks it:
 
 - **NVIDIA (cloud):** about 10 minutes, works anytime.
-- **My laptop (local qwen3):** about an hour, private. The laptop must be on, with
-  **`start_worker.bat`** open and Ollama running.
+- **My laptop (local qwen3):** about an hour, private. On the laptop, choosing this
+  opens the plan worker (the browser asks first). It reads that one plan and closes,
+  so nothing runs in the background. If Ollama isn't running, it starts Ollama for the job
+  and stops it afterwards. From another device, run `start_worker.bat` on the laptop yourself.
 
 When it's done, the editor shows what changed and anything to check. **Load into
 editor**, look it over, then **Save to GitHub**. Nothing changes until you save.
@@ -63,9 +65,12 @@ editor ◄── polls ── imports/result.json ◄── {status: "running"},
   `PLAN_IMPORT_LOCAL_PRIVATE_KEY` in `.env.local`. The public keys are in `config.json`.
 - Only the result (the new plan, the changes and anything to check) is committed. The
   decrypted file is deleted after reading.
-- The laptop worker checks GitHub every 30 seconds, works in its own copy of the repo
-  (`data/worker-repo`), and posts a "running" status when it starts. If it doesn't pick
-  an upload up within 2 minutes, the editor offers to send it to NVIDIA instead.
+- The site opens the laptop worker with a `training-worker://` link, which
+  `python setup_worker_link.py` registers for your Windows user (`--remove` undoes it).
+  The worker checks GitHub every 30 seconds, works in its own copy of the repo
+  (`data/worker-repo`), posts a "running" status when it starts, and exits after one
+  plan (or after 10 minutes with none). If it doesn't pick an upload up within 2
+  minutes, the editor offers to send it to NVIDIA instead.
 
 **On the laptop:** drag the plan's `.md` file onto **`import_plan.bat`**. It reads the
 plan twice, independently:
@@ -113,7 +118,7 @@ Garmin Personal API ──► pull.py ──► data/*.json ──► build.py �
 | `plan_import.py`, `import_plan.bat` | Imports a Markdown training plan (code reader + local AI reader + checks + preview). |
 | `.github/workflows/update.yml` | The scheduled job that pulls, builds and publishes. |
 | `.github/workflows/import-plan.yml`, `.github/scripts/decrypt_plan.mjs` | Imports a plan uploaded from the site for NVIDIA (decrypt, read, check, write the result). |
-| `plan_worker.py`, `start_worker.bat` | The laptop worker: reads uploads sent to "My laptop" with the local AI. |
+| `plan_worker.py`, `start_worker.bat`, `setup_worker_link.py` | The laptop worker: reads uploads sent to "My laptop" with the local AI. The setup script lets the site open it. |
 
 ## Privacy
 
