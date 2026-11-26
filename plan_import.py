@@ -446,6 +446,11 @@ def ask_nvidia(model, prompt, schema, timeout=180):
                 time.sleep(5 * (attempt + 1))
                 continue
             raise
+        except (urllib.error.URLError, TimeoutError, ConnectionError):   # slow queue or dropped connection: try again
+            if attempt < 4:
+                time.sleep(5 * (attempt + 1))
+                continue
+            raise
     text = re.sub(r"<think>.*?</think>", "", text, flags=re.S).strip()
     m = re.search(r"\{.*\}", text, re.S)
     return json.loads(m.group(0) if m else text)
