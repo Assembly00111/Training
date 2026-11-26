@@ -1157,6 +1157,10 @@ async function encryptPlan(text, pubB64) {
 
 // Which AI reads the upload: "nvidia" (the GitHub job, ~10 min) or "local" (plan_worker.py on the laptop, ~1 hour).
 const IMP_ENGINE_KEY = 'plan-import-engine';
+// Opens start_worker.bat on the laptop through a link type registered there (setup_worker_link.py).
+// Has to run straight from a click; on other devices (or before setup) the browser just ignores it.
+const WORKER_LINK = 'training-worker://start';
+function launchWorker() { const a = document.createElement('a'); a.href = WORKER_LINK; a.style.display = 'none'; document.body.appendChild(a); a.click(); a.remove(); }
 let impFile = null;   // {text, name} of the picked file, kept in memory so you can switch reader without picking it again
 
 async function pickPlan(file) {
@@ -1177,7 +1181,7 @@ async function pickPlan(file) {
     <div class="muted">Code reads the plan either way; an AI then reads each week on its own to catch mistakes.</div>
     <div class="imp-actions">
       ${opt('nvidia', 'NVIDIA (cloud)', 'About 10 minutes. Works anytime.')}
-      ${opt('local', 'My laptop (local qwen3)', 'About an hour. Private. The laptop must be on with start_worker.bat and Ollama running.')}
+      ${opt('local', 'My laptop (local qwen3)', 'About an hour. Private. On the laptop this opens the plan worker (your browser asks first); it closes when done.')}
     </div>
     <div class="imp-actions"><button type="button" class="pe-link" style="margin-left:0" data-imp="discard">Cancel</button></div>`);
 }
@@ -1227,10 +1231,12 @@ function impWait() {
   } else {
     const late = mins >= 2;
     body = `<h3>Waiting for your laptop to pick up ${esc(p.name || 'your plan')}…</h3>
-      <div>${late ? `<b style="color:var(--warn)">Your laptop hasn't picked it up after ${mins} min.</b> Is it on and awake, with <b>start_worker.bat</b> open and Ollama running?`
-                  : 'The laptop checks for new plans every 30 seconds.'}</div>
-      <div class="imp-actions">${late ? (impFile ? '<button type="button" class="pe-secondary" data-imp="go-nvidia">Use NVIDIA instead</button>'
-                                               : '<span class="muted">To use NVIDIA instead, pick the file again with ⇪ Import .md.</span>') : ''}
+      <div>${late ? `<b style="color:var(--warn)">Your laptop hasn't picked it up after ${mins} min.</b> If the plan worker window didn't open, use the button below on the laptop
+                     (or run <b>start_worker.bat</b> there). From another device, the laptop must be on and you start it there.`
+                  : 'On the laptop, a "Plan worker" window should open (allow it if your browser asks). It picks the plan up within 30 seconds.'}</div>
+      <div class="imp-actions"><a class="pe-secondary" href="${WORKER_LINK}" style="text-decoration:none">Open the laptop worker</a>
+        ${late ? (impFile ? '<button type="button" class="pe-secondary" data-imp="go-nvidia">Use NVIDIA instead</button>'
+                          : '<span class="muted">To use NVIDIA instead, pick the file again with ⇪ Import .md.</span>') : ''}
         <button type="button" class="pe-link" style="margin-left:0" data-imp="discard">Stop waiting</button></div>`;
   }
   impBox(body);
@@ -1287,6 +1293,7 @@ function wireImport() {
   file.addEventListener('change', () => { const f = file.files[0]; file.value = ''; if (f) pickPlan(f); });
   document.getElementById('pe-import').addEventListener('click', ev => {
     const b = ev.target.closest('[data-imp]'); if (!b) return;
+    if (b.dataset.imp === 'go-local') launchWorker();
     if (b.dataset.imp === 'go-nvidia' || b.dataset.imp === 'go-local') { clearTimeout(impTimer); importPlan(b.dataset.imp.slice(3)); }
     if (b.dataset.imp === 'discard') { clearTimeout(impTimer); impSetPending(null); impResult = null; impFile = null; impBox(''); peStatus(''); }
     if (b.dataset.imp === 'load' && impResult) {

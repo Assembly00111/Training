@@ -8,9 +8,14 @@ imports/result.json for the dashboard to show. The decrypted file is deleted aft
 
 It works in its own copy of the repo (data/worker-repo), so it never touches this folder.
 
-Run it with start_worker.bat and leave the window open.
-  --once   stop after one import (for testing)
-  --test   skip the AI (code reader only), for a quick test of the plumbing
+Normally the dashboard opens it for you (the training-worker:// link, set up once with
+setup_worker_link.py): it reads that one plan and closes, so nothing runs in the
+background. You can also run start_worker.bat by hand.
+  --launched  opened from the dashboard: read one plan, then exit (or exit after
+              10 minutes if no plan for the laptop shows up)
+  --once      stop after one import
+  --test      skip the AI (code reader only), for a quick test of the plumbing
+If Ollama isn't running, the worker starts it for the job and stops it afterwards.
 """
 import json
 import os
@@ -63,6 +68,33 @@ def ollama_up():
             return bool(r.read())
     except Exception:
         return False
+
+
+def start_ollama():
+    """Start Ollama if it isn't running. Returns the process if this worker started it (to stop it later), else None."""
+    if ollama_up():
+        return None
+    exe = shutil.which("ollama") or str(Path(os.environ.get("LOCALAPPDATA", "")) / "Programs" / "Ollama" / "ollama.exe")
+    if not Path(exe).exists() and not shutil.which("ollama"):
+        return None
+    say("Starting Ollama for this job (it's stopped again afterwards)...")
+    proc = subprocess.Popen([exe, "serve"], stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                            creationflags=getattr(subprocess, "CREATE_NO_WINDOW", 0))
+    for _ in range(60):
+        if ollama_up():
+            return proc
+        time.sleep(1)
+    return proc
+
+
+def stop_ollama(proc):
+    if proc and proc.poll() is None:
+        proc.terminate()
+        try:
+            proc.wait(15)
+        except subprocess.TimeoutExpired:
+            proc.kill()
+        say("Stopped Ollama again.")
 
 
 def setup():
@@ -154,16 +186,23 @@ def main():
         sys.stdout.reconfigure(encoding="utf-8")
     except Exception:
         pass
-    once, test = "--once" in sys.argv, "--test" in sys.argv
+    launched, test = "--launched" in sys.argv, "--test" in sys.argv
+    once = launched or "--once" in sys.argv
+    idle_limit = 10 * 60 if launched else None
     if not env_value("PLAN_IMPORT_LOCAL_PRIVATE_KEY"):
         print("PLAN_IMPORT_LOCAL_PRIVATE_KEY isn't in .env.local, so this laptop can't read uploads.")
         sys.exit(1)
     setup()
-    say("Plan worker is running. Leave this window open; plans you send to 'My laptop' from the dashboard are read here.")
-    if not ollama_up():
-        say("Note: Ollama isn't running right now. Start it before importing.")
+    if launched:
+        say("Opened from the dashboard. Waiting for your plan to arrive (usually under a minute)...")
+    else:
+        say("Plan worker is running. Leave this window open; plans you send to 'My laptop' from the dashboard are read here.")
+    t_start = time.time()
     done = set()
     while True:
+        if idle_limit and time.time() - t_start > idle_limit:
+            say("No plan for the laptop arrived in 10 minutes, so the worker is closing.")
+            return
         try:
             git("fetch", "-q", "origin", "main")
             req = remote_json("imports/request.json") or {}
@@ -174,7 +213,11 @@ def main():
                 say("New plan to read. With the local AI this takes about an hour...")
                 t0 = time.time()
                 sync()
-                r = handle(req, test)
+                ollama_proc = None if test else start_ollama()
+                try:
+                    r = handle(req, test)
+                finally:
+                    stop_ollama(ollama_proc)
                 done.add(rid)
                 say(f"Done in {(time.time() - t0) / 60:.0f} min: " + ("result sent to the dashboard." if r.get("ok") else "failed: " + r.get("error", "")))
                 if once:
