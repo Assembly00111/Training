@@ -1,0 +1,69 @@
+name: Import plan
+
+# Runs when the dashboard uploads a plan (Edit plan -> Import .md).
+# The upload is encrypted in the browser; only this job can decrypt it, using the
+# PLAN_IMPORT_PRIVATE_KEY secret. The plan is read by code and checked by NVIDIA's
+# AI (NVIDIA_API_KEY secret), and only the result (the new plan plus anything to
+# check) is committed, as imports/result.json. The decrypted file never leaves the
+# runner. Nothing changes plan.json until it's loaded and saved in the editor.
+
+on:
+  push:
+    branches: [main]
+    paths: ["imports/request.json"]
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: plan-import
+  cancel-in-progress: true
+
+jobs:
+  import:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      TZ: Asia/Kolkata
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.12"
+
+      - name: Decrypt the uploaded plan
+        id: dec
+        env:
+          PLAN_IMPORT_PRIVATE_KEY: ${{ secrets.PLAN_IMPORT_PRIVATE_KEY }}
+        run: node .github/scripts/decrypt_plan.mjs imports/request.json "$RUNNER_TEMP/plan.md" "$RUNNER_TEMP/id.txt"
+
+      - name: Read and check the plan (code + NVIDIA)
+        env:
+          NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
+        run: python plan_import.py "$RUNNER_TEMP/plan.md" --nvidia --no-open --ci=imports/result.json --id="$(cat "$RUNNER_TEMP/id.txt")"
+
+      - name: Note a decryption failure
+        if: failure() && steps.dec.outcome == 'failure'
+        run: |
+          python - <<'EOF'
+          import json, os, datetime
+          p = os.path.join(os.environ["RUNNER_TEMP"], "id.txt")
+          rid = open(p).read().strip() if os.path.exists(p) else None
+          json.dump({"id": rid, "at": datetime.datetime.now().astimezone().isoformat(timespec="seconds"), "ok": False,
+                     "error": "GitHub couldn't decrypt the upload. Check that the PLAN_IMPORT_PRIVATE_KEY secret matches import_public_key in config.json."},
+                    open("imports/result.json", "w"), indent=1)
+          EOF
+
+      - name: Save the result
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/plan.md"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add imports/result.json
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -q -m "Plan import result"
+          for i in 1 2 3; do git pull --rebase -q && git push -q && exit 0; sleep 5; done
+          exit 1

@@ -37,7 +37,16 @@ editor but nobody can save. **Download** saves a copy of `plan.json` instead.
 
 ### Importing a whole new plan from Markdown
 
-On the laptop, drag the plan's `.md` file onto **`import_plan.bat`**. It reads the
+**On the site (any device):** in the editor, click **⇪ Import .md** and pick the plan
+file. It's encrypted in the browser before upload (AES-256-GCM, with the key wrapped
+by the RSA public key in `config.json`), so this public repo only ever holds
+ciphertext in `imports/request.json`. The **Import plan** workflow decrypts it with the
+`PLAN_IMPORT_PRIVATE_KEY` secret, reads it with code plus NVIDIA's AI
+(`NVIDIA_API_KEY` secret), and commits only the result to `imports/result.json`. After
+about 10 minutes the editor shows what changed and anything to check. **Load into
+editor**, look it over, then **Save to GitHub**. Nothing changes until you save.
+
+**On the laptop:** drag the plan's `.md` file onto **`import_plan.bat`**. It reads the
 plan twice, independently:
 
 1. **Code** reads every table with a `Week` column and weekday columns (any order or
@@ -82,6 +91,7 @@ Garmin Personal API ──► pull.py ──► data/*.json ──► build.py �
 | `plan.json` | The training plan, session by session, used by the plan vs actual panel. |
 | `plan_import.py`, `import_plan.bat` | Imports a Markdown training plan (code reader + local AI reader + checks + preview). |
 | `.github/workflows/update.yml` | The scheduled job that pulls, builds and publishes. |
+| `.github/workflows/import-plan.yml`, `.github/scripts/decrypt_plan.mjs` | Imports a plan uploaded from the site (decrypt, read, check, write the result). |
 
 ## Privacy
 

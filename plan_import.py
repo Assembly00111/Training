@@ -789,8 +789,8 @@ def main():
         model = "nvidia:" + cfg.get("import_nvidia_model", NVIDIA_DEFAULT_MODEL)
 
     print(f"\nImporting {src.name}\n")
-    pulled = git("pull", "--ff-only", "-q")
-    if pulled.returncode != 0:
+    pulled = git("pull", "--ff-only", "-q") if not CI_OUT else None
+    if pulled is not None and pulled.returncode != 0:
         print("  (Couldn't fetch the latest plan from GitHub; comparing with the plan on this computer.)")
     current = json.loads(PLAN_FILE.read_text(encoding="utf-8")) if PLAN_FILE.exists() else None
 
@@ -807,7 +807,7 @@ def main():
     if "--no-ai" in sys.argv:
         flags.append(("warn", "Second reader switched off (--no-ai): only the code reader and rule checks were used."))
     elif backend == "nvidia" and not has_key:
-        flags.append(("attn", "NVIDIA was chosen but NVIDIA_API_KEY isn't set in .env.local, so there was no second reader."))
+        flags.append(("attn", "NVIDIA was chosen but NVIDIA_API_KEY isn't set (in .env.local, or as a secret on GitHub), so there was no second reader."))
         print("  Second reader   No NVIDIA key in .env.local. Continuing with code and rule checks only.")
     elif backend == "local" and not ollama_up():
         flags.append(("attn", "Ollama isn't running, so there was no second reader. Start Ollama and import again for the full check."))
@@ -836,6 +836,15 @@ def main():
     print(f"\n  Preview opened in your browser ({PREVIEW_FILE.name}).")
     if "--no-open" not in sys.argv:
         webbrowser.open(PREVIEW_FILE.as_uri())
+    if CI_OUT:
+        ci_write({"ok": True, "model": model.replace("nvidia:", "") if ai_used else None, "ai_used": ai_used,
+                  "flags": flags, "counts": {k: len(v) for k, v in ch.items()},
+                  "changes": {"added": ch["added"], "removed": ch["removed"],
+                              "changed": [{"old": o, "new": n, "fields": f} for o, n, f in ch["changed"]],
+                              "settings": [{"what": w, "old": a, "new": b} for w, a, b in ch["settings"]]},
+                  "plan": new})
+        print("  Result written for the dashboard.")
+        return
     if "--dry-run" in sys.argv:
         json.dump(new, open(ROOT / "data" / "plan_import_result.json", "w", encoding="utf-8"), indent=2, ensure_ascii=False)
         print("  Dry run: nothing saved.")
@@ -861,5 +870,34 @@ def main():
     subprocess.run([sys.executable, str(ROOT / "build.py"), "--no-open"], cwd=ROOT)
 
 
+def _opt(name):
+    for a in sys.argv:
+        if a.startswith(f"--{name}="):
+            return a.split("=", 1)[1]
+    return None
+
+
+# Cloud mode (used by the GitHub import job): --ci=<result.json> --id=<request id>.
+# Never asks anything; writes the result, or the error, to the file for the dashboard to show.
+CI_OUT = _opt("ci")
+CI_ID = _opt("id")
+
+
+def ci_write(obj):
+    obj = {"id": CI_ID, "at": datetime.now().astimezone().isoformat(timespec="seconds"), **obj}
+    Path(CI_OUT).parent.mkdir(parents=True, exist_ok=True)
+    Path(CI_OUT).write_text(json.dumps(obj, indent=1, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
 if __name__ == "__main__":
-    main()
+    if CI_OUT:
+        try:
+            main()
+        except BaseException as e:   # includes SystemExit from a refused key
+            msg = str(e).strip() or type(e).__name__
+            if msg.isdigit():
+                msg = "The importer couldn't find any session tables (a table with a Week column and weekday columns)."
+            ci_write({"ok": False, "error": msg})
+            print("  Import failed:", msg)
+    else:
+        main()

@@ -9,5 +9,6 @@
   "goal": "A faster 800m",
   "units": "km",
   "default_theme": "watch",
-  "repo": "Assembly00111/Training"
+  "repo": "Assembly00111/Training",
+  "import_public_key": "MIIBojANBgkqhkiG9w0BAQEFAAOCAY8AMIIBigKCAYEA7uya9H4uNjJOP2VlX79P2q/tNm64rnKamyxyVe62IWIHeO0P8qIZw6wrriyBMGZqXS6b4D9DuzCsNB9f+N6LIj2LOZ7URgYlWUlmwwyyTeMz021j6ULKgVXCasoBtcrBSWzxaDCPXxZut2MyjnroB1HL7IDFJEJpwGSopatYyv8xBDBgct4DnKPF4vDs6wNucjejoV7WWBXQd2teZVH/oh+mKTKZoUjQqOF9MppOiDQyqBuwSaIAF4Tb+g85LsgbcENeV2I97RGn47bLcJWlvLX+GZ6JQWYrvFfqyymdcnS2UYUkKrqHmX7Ts6Fzrb7ezE/UFSW1nwQfHrfWbyXcrlbYXs7k0CEJfGOKti7hwYy2FuOOAM2VH1uoKG+6YYFDd6TdBPmRRhdlQI/uFPCiysvLE/Qb9rlT484KCD1B8/QXi5tkXI1o3XH4DmTz9mSJvzVKtKjdx0+KP2Q6uGSgq/sF2YXotXXwjoy62Vv5XM6pnWU4QQNM7+VKrSRidPmxAgMBAAE="
 }

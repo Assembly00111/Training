@@ -155,6 +155,14 @@ dialog#pe::backdrop { background:rgba(0,0,0,.55); }
 .pe-btn { font:inherit; font-size:12.5px; margin-top:12px; border:1px dashed var(--axis); background:transparent; color:var(--ink2); padding:7px 12px; border-radius:8px; cursor:pointer; }
 .pe-primary { font:inherit; font-size:13px; font-weight:650; border:none; background:var(--accent); color:var(--accent-ink); padding:8px 16px; border-radius:999px; cursor:pointer; }
 .pe-secondary { font:inherit; font-size:13px; border:1px solid var(--border); background:var(--card2); color:var(--ink); padding:8px 14px; border-radius:999px; cursor:pointer; }
+#pe-import { margin:14px 18px 0; padding:14px 16px; border:1px solid var(--border); border-radius:12px; background:var(--card2); font-size:13px; }
+#pe-import h3 { margin:0 0 6px; font-size:14px; }
+#pe-import ul { margin:8px 0; padding-left:18px; } #pe-import li { margin:3px 0; }
+#pe-import .imp-actions { display:flex; gap:8px; flex-wrap:wrap; margin-top:10px; }
+#pe-import details { margin-top:6px; } #pe-import summary { cursor:pointer; color:var(--ink2); }
+#pe-import .flag-attn, #pe-import .flag-error { color:var(--warn, var(--accent)); font-weight:600; }
+#pe-import .muted { color:var(--ink2); }
+@media (max-width:640px) { #pe-import { margin:12px 12px 0; } }
 .pe-status { font-size:12.5px; min-height:1em; } .pe-status.good { color:var(--good); } .pe-status.bad { color:var(--bad); }
 #pe-token { width:260px; }
 @media (max-width: 760px) {
@@ -266,13 +274,14 @@ footer { margin-top:40px; color:var(--muted); font-size:12px; text-align:center;
 <dialog id="pe" aria-label="Edit training plan">
   <div class="pe-top">
     <div class="row1"><h2 style="margin:0">Edit training plan</h2>
-      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pe-secondary" id="pe-cancel">Close</button><button type="button" class="pe-secondary" id="pe-download">Download</button><button type="button" class="pe-primary" id="pe-save">Save to GitHub</button></div></div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap"><button type="button" class="pe-secondary" id="pe-cancel">Close</button><button type="button" class="pe-secondary" id="pe-import-btn" title="Upload your plan's Markdown file. It's encrypted before it leaves this device.">⇪ Import .md</button><input type="file" id="pe-import-file" accept=".md,.markdown,.txt,text/markdown" hidden><button type="button" class="pe-secondary" id="pe-download">Download</button><button type="button" class="pe-primary" id="pe-save">Save to GitHub</button></div></div>
     <div class="row2"><input id="pe-token" type="password" autocomplete="off" spellcheck="false" placeholder="GitHub token (only needed to save)" aria-label="GitHub token">
       <label class="pe-chk"><input type="checkbox" id="pe-remember" checked> Remember on this device</label>
       <button type="button" class="pe-link" id="pe-forget" style="margin-left:0">Forget token</button>
       <a href="https://github.com/settings/personal-access-tokens/new" target="_blank" rel="noopener" style="color:var(--accent)">Make a token</a></div>
     <div class="pe-status" id="pe-status" role="status"></div>
   </div>
+  <div id="pe-import" hidden></div>
   <div id="pe-body"></div>
 </dialog>
 
@@ -982,8 +991,9 @@ function openEditor() {
   renderEditor();
   peStatus('');
   const d = peEl(); if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+  if (impPending()) impWait(); else impBox('');
 }
-function closeEditor() { const d = peEl(); if (d.close) d.close(); else d.removeAttribute('open'); }
+function closeEditor() { clearTimeout(impTimer); const d = peEl(); if (d.close) d.close(); else d.removeAttribute('open'); }
 
 function renderEditor() {
   const g = draft.goals, h = g.half || {}, e = g['800'] || {};
@@ -1122,8 +1132,133 @@ async function savePlan(where) {
   }
 }
 
+// ---------- plan import: Markdown -> encrypted upload -> GitHub job -> preview here ----------
+// The .md is encrypted in this browser (AES-256-GCM, key wrapped with the repo's RSA public
+// key) so the public repository only ever holds ciphertext. The "Import plan" workflow
+// decrypts it, reads it (code + NVIDIA), and writes imports/result.json, shown below.
+const IMP_KEY = 'plan-import-pending';
+let impTimer = null;
+function impPending() { try { return JSON.parse(localStorage.getItem(IMP_KEY) || 'null'); } catch (e) { return null; } }
+function impSetPending(v) { try { v ? localStorage.setItem(IMP_KEY, JSON.stringify(v)) : localStorage.removeItem(IMP_KEY); } catch (e) {} }
+function impBox(h) { const b = document.getElementById('pe-import'); b.hidden = !h; b.innerHTML = h || ''; }
+function ghToken() { const el = document.getElementById('pe-token'); return (el && el.value.trim()) || readToken(); }
+function ghHdr() { const t = ghToken(); return {Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(t ? {Authorization: `Bearer ${t}`} : {})}; }
+function bytesB64(buf) { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
+
+async function encryptPlan(text) {
+  const spki = Uint8Array.from(atob(CFG.import_public_key), c => c.charCodeAt(0));
+  const pub = await crypto.subtle.importKey('spki', spki, {name: 'RSA-OAEP', hash: 'SHA-256'}, false, ['encrypt']);
+  const aes = await crypto.subtle.generateKey({name: 'AES-GCM', length: 256}, true, ['encrypt']);
+  const iv = crypto.getRandomValues(new Uint8Array(12));
+  const data = await crypto.subtle.encrypt({name: 'AES-GCM', iv}, aes, new TextEncoder().encode(text));
+  const key = await crypto.subtle.encrypt({name: 'RSA-OAEP'}, pub, await crypto.subtle.exportKey('raw', aes));
+  return {key: bytesB64(key), iv: bytesB64(iv), data: bytesB64(data)};
+}
+
+async function importPlan(file) {
+  if (!CFG.repo || !CFG.import_public_key) { peStatus('Importing needs "repo" and "import_public_key" in config.json.', 'bad'); return; }
+  if (!window.crypto || !crypto.subtle) { peStatus("This browser can't encrypt the file (it needs a secure https page).", 'bad'); return; }
+  const tokEl = document.getElementById('pe-token'); const token = ghToken();
+  if (!token) { peStatus('Paste your GitHub token first. Importing uses the same token as saving.', 'bad'); tokEl.focus(); return; }
+  if (document.getElementById('pe-remember').checked) writeToken(token);
+  if (file.size > 400000) { peStatus('That file is too big for a training plan.', 'bad'); return; }
+  const text = await file.text();
+  if (!/^\s*\|.*\|\s*$/m.test(text)) { peStatus("That file has no tables. The importer reads plans whose weeks are in a Markdown table.", 'bad'); return; }
+  peStatus('Encrypting and uploading…');
+  try {
+    const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
+    const body = JSON.stringify({v: 1, id, at: new Date().toISOString(), alg: 'RSA-OAEP-256+A256GCM', ...(await encryptPlan(text))}, null, 1) + '\n';
+    const api = `https://api.github.com/repos/${CFG.repo}/contents/imports/request.json`;
+    const cur = await fetch(`${api}?ref=main&t=${Date.now()}`, {headers: ghHdr(), cache: 'no-store'});
+    if (!cur.ok && cur.status !== 404) throw new Error(cur.status === 401 ? 'GitHub says the token is wrong or has expired.' : `GitHub returned an error (${cur.status}).`);
+    const sha = cur.ok ? (await cur.json()).sha : undefined;
+    const res = await fetch(api, {method: 'PUT', headers: {...ghHdr(), 'Content-Type': 'application/json'},
+      body: JSON.stringify({message: 'Plan import request (encrypted)', content: b64utf8(body), sha, branch: 'main'})});
+    if (!res.ok) throw new Error(res.status === 401 ? 'GitHub says the token is wrong or has expired.' : (res.status === 403 || res.status === 404) ? "The token doesn't have permission to change this repository's contents." : `GitHub returned an error (${res.status}).`);
+    impSetPending({id, at: Date.now(), name: file.name});
+    peStatus('Uploaded (encrypted).', 'good');
+    impWait();
+  } catch (e) {
+    peStatus((e && e.message && !/fetch/i.test(e.message)) ? e.message : "Couldn't reach GitHub. Check your internet connection.", 'bad');
+  }
+}
+
+function impWait() {
+  clearTimeout(impTimer);
+  const p = impPending(); if (!p) return;
+  const mins = Math.max(0, Math.round((Date.now() - p.at) / 60000));
+  impBox(`<h3>Reading ${esc(p.name || 'your plan')} on GitHub…</h3>
+    <div>Code reads every table, then NVIDIA's AI checks each week on its own. This usually takes about 10 minutes
+      (<b>${mins} min</b> so far). You can close this or the page; the result will be waiting here when you open the editor again.</div>
+    <div class="imp-actions"><a href="https://github.com/${esc(CFG.repo)}/actions/workflows/import-plan.yml" target="_blank" rel="noopener" style="color:var(--accent)">Watch it on GitHub</a>
+      <button type="button" class="pe-link" style="margin-left:12px" data-imp="discard">Stop waiting</button></div>`);
+  impCheck(p);
+}
+
+async function impCheck(p) {
+  if (!peEl().open) return;
+  try {
+    const r = await fetch(`https://api.github.com/repos/${CFG.repo}/contents/imports/result.json?ref=main&t=${Date.now()}`, {headers: ghHdr(), cache: 'no-store'});
+    if (r.ok) {
+      const res = JSON.parse(utf8b64((await r.json()).content));
+      if (res.id === p.id) { impShow(res); return; }
+    }
+  } catch (e) {}
+  impTimer = setTimeout(impWait, 20000);
+}
+
+let impResult = null;
+function impShow(res) {
+  impResult = res;
+  if (!res.ok) {
+    impBox(`<h3>The import didn't work</h3><div>${esc(res.error || 'Unknown error.')}</div>
+      <div class="imp-actions"><a href="https://github.com/${esc(CFG.repo)}/actions/workflows/import-plan.yml" target="_blank" rel="noopener" style="color:var(--accent)">See the job on GitHub</a>
+      <button type="button" class="pe-secondary" data-imp="discard">Dismiss</button></div>`);
+    return;
+  }
+  const label = {error: "Couldn't read", attn: 'Check this', warn: 'Note', minor: 'Minor'};
+  const big = res.flags.filter(([k]) => k === 'attn' || k === 'error'), small = res.flags.filter(([k]) => !(k === 'attn' || k === 'error'));
+  const fl = ([k, t]) => `<li><span class="flag-${k}">${label[k] || k}:</span> ${esc(t)}</li>`;
+  const ses = s => `${fD(P(s.d), {weekday: 'short', day: 'numeric', month: 'short'})} · ${esc(s.title)} · ${s.km} km`;
+  const c = res.changes, n = res.counts;
+  const list = (title, items, f) => items.length ? `<details><summary>${title} (${items.length})</summary><ul>${items.map(x => `<li>${f(x)}</li>`).join('')}</ul></details>` : '';
+  impBox(`<h3>Your plan is read: ${res.plan.sessions.length} sessions</h3>
+    <div class="muted">${n.added} added · ${n.removed} removed · ${n.changed} changed · ${n.settings} settings changed · checked by ${res.ai_used ? esc(res.model) : 'code only (no AI)'}</div>
+    ${big.length ? `<ul>${big.map(fl).join('')}</ul>` : '<div style="color:var(--good);margin:8px 0">No problems found. Both readers agree and every check passed.</div>'}
+    ${small.length ? `<details><summary>Notes (${small.length})</summary><ul>${small.map(fl).join('')}</ul></details>` : ''}
+    ${list('Sessions added', c.added, ses)}${list('Sessions removed', c.removed, ses)}
+    ${list('Sessions changed', c.changed, x => `${ses(x.new)} <span class="muted">(was: ${esc(x.old.title)} · ${x.old.km} km)</span>`)}
+    ${list('Settings changed', c.settings, x => `${esc(x.what)}: <span class="muted">${esc(x.old)}</span> → ${esc(x.new)}`)}
+    <div class="imp-actions"><button type="button" class="pe-primary" data-imp="load">Load into editor</button>
+      <button type="button" class="pe-secondary" data-imp="discard">Discard</button></div>
+    <div class="muted" style="margin-top:6px">Loading changes nothing on GitHub until you press Save to GitHub.</div>`);
+}
+
+function wireImport() {
+  const file = document.getElementById('pe-import-file');
+  document.getElementById('pe-import-btn').addEventListener('click', () => {
+    if (impPending() && !confirm('An import is already waiting for its result. Start a new one instead?')) return;
+    file.click();
+  });
+  file.addEventListener('change', () => { const f = file.files[0]; file.value = ''; if (f) importPlan(f); });
+  document.getElementById('pe-import').addEventListener('click', ev => {
+    const b = ev.target.closest('[data-imp]'); if (!b) return;
+    if (b.dataset.imp === 'discard') { clearTimeout(impTimer); impSetPending(null); impResult = null; impBox(''); peStatus(''); }
+    if (b.dataset.imp === 'load' && impResult) {
+      draft = JSON.parse(JSON.stringify(impResult.plan));
+      draft.sessions.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);
+      draft.notes = draft.notes || []; draft.gym = draft.gym || [];
+      impSetPending(null); impResult = null; impBox('');
+      renderEditor();
+      peStatus('Imported plan loaded below. Look it over, then press Save to GitHub (or Close to throw it away).', 'good');
+      document.getElementById('pe-body').scrollIntoView({block: 'start'});
+    }
+  });
+}
+
 function wireEditor() {
   const d = peEl();
+  wireImport();
   document.getElementById('plan-edit').addEventListener('click', openEditor);
   d.addEventListener('input', ev => {
     const t = ev.target, k = t.dataset.k; if (!k) return;
