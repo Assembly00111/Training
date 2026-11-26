@@ -1145,8 +1145,8 @@ function ghToken() { const el = document.getElementById('pe-token'); return (el 
 function ghHdr() { const t = ghToken(); return {Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', ...(t ? {Authorization: `Bearer ${t}`} : {})}; }
 function bytesB64(buf) { const u = new Uint8Array(buf); let s = ''; for (let i = 0; i < u.length; i += 0x8000) s += String.fromCharCode.apply(null, u.subarray(i, i + 0x8000)); return btoa(s); }
 
-async function encryptPlan(text) {
-  const spki = Uint8Array.from(atob(CFG.import_public_key), c => c.charCodeAt(0));
+async function encryptPlan(text, pubB64) {
+  const spki = Uint8Array.from(atob(pubB64 || CFG.import_public_key), c => c.charCodeAt(0));
   const pub = await crypto.subtle.importKey('spki', spki, {name: 'RSA-OAEP', hash: 'SHA-256'}, false, ['encrypt']);
   const aes = await crypto.subtle.generateKey({name: 'AES-GCM', length: 256}, true, ['encrypt']);
   const iv = crypto.getRandomValues(new Uint8Array(12));
@@ -1155,7 +1155,11 @@ async function encryptPlan(text) {
   return {key: bytesB64(key), iv: bytesB64(iv), data: bytesB64(data)};
 }
 
-async function importPlan(file) {
+// Which AI reads the upload: "nvidia" (the GitHub job, ~10 min) or "local" (plan_worker.py on the laptop, ~1 hour).
+const IMP_ENGINE_KEY = 'plan-import-engine';
+let impFile = null;   // {text, name} of the picked file, kept in memory so you can switch reader without picking it again
+
+async function pickPlan(file) {
   if (!CFG.repo || !CFG.import_public_key) { peStatus('Importing needs "repo" and "import_public_key" in config.json.', 'bad'); return; }
   if (!window.crypto || !crypto.subtle) { peStatus("This browser can't encrypt the file (it needs a secure https page).", 'bad'); return; }
   const tokEl = document.getElementById('pe-token'); const token = ghToken();
@@ -1164,10 +1168,29 @@ async function importPlan(file) {
   if (file.size > 400000) { peStatus('That file is too big for a training plan.', 'bad'); return; }
   const text = await file.text();
   if (!/^\s*\|.*\|\s*$/m.test(text)) { peStatus("That file has no tables. The importer reads plans whose weeks are in a Markdown table.", 'bad'); return; }
+  impFile = {text, name: file.name};
+  if (!CFG.import_local_public_key) { importPlan('nvidia'); return; }
+  let last = 'nvidia'; try { last = localStorage.getItem(IMP_ENGINE_KEY) || 'nvidia'; } catch (e) {}
+  const opt = (eng, title, sub) => `<button type="button" class="${eng === last ? 'pe-primary' : 'pe-secondary'}" data-imp="go-${eng}" style="text-align:left;border-radius:12px">
+      <b>${title}</b><br><span style="font-size:12px;opacity:.85">${sub}</span></button>`;
+  impBox(`<h3>Who should double-check ${esc(file.name)}?</h3>
+    <div class="muted">Code reads the plan either way; an AI then reads each week on its own to catch mistakes.</div>
+    <div class="imp-actions">
+      ${opt('nvidia', 'NVIDIA (cloud)', 'About 10 minutes. Works anytime.')}
+      ${opt('local', 'My laptop (local qwen3)', 'About an hour. Private. The laptop must be on with start_worker.bat and Ollama running.')}
+    </div>
+    <div class="imp-actions"><button type="button" class="pe-link" style="margin-left:0" data-imp="discard">Cancel</button></div>`);
+}
+
+async function importPlan(engine) {
+  if (!impFile) { peStatus('Pick the file again with ⇪ Import .md.', 'bad'); return; }
+  const {text, name} = impFile;
+  try { localStorage.setItem(IMP_ENGINE_KEY, engine); } catch (e) {}
   peStatus('Encrypting and uploading…');
   try {
     const id = (crypto.randomUUID ? crypto.randomUUID() : String(Date.now()) + Math.random().toString(16).slice(2));
-    const body = JSON.stringify({v: 1, id, at: new Date().toISOString(), alg: 'RSA-OAEP-256+A256GCM', ...(await encryptPlan(text))}, null, 1) + '\n';
+    const pub = engine === 'local' ? CFG.import_local_public_key : CFG.import_public_key;
+    const body = JSON.stringify({v: 1, id, engine, at: new Date().toISOString(), alg: 'RSA-OAEP-256+A256GCM', ...(await encryptPlan(text, pub))}, null, 1) + '\n';
     const api = `https://api.github.com/repos/${CFG.repo}/contents/imports/request.json`;
     const cur = await fetch(`${api}?ref=main&t=${Date.now()}`, {headers: ghHdr(), cache: 'no-store'});
     if (!cur.ok && cur.status !== 404) throw new Error(cur.status === 401 ? 'GitHub says the token is wrong or has expired.' : `GitHub returned an error (${cur.status}).`);
@@ -1175,7 +1198,7 @@ async function importPlan(file) {
     const res = await fetch(api, {method: 'PUT', headers: {...ghHdr(), 'Content-Type': 'application/json'},
       body: JSON.stringify({message: 'Plan import request (encrypted)', content: b64utf8(body), sha, branch: 'main'})});
     if (!res.ok) throw new Error(res.status === 401 ? 'GitHub says the token is wrong or has expired.' : (res.status === 403 || res.status === 404) ? "The token doesn't have permission to change this repository's contents." : `GitHub returned an error (${res.status}).`);
-    impSetPending({id, at: Date.now(), name: file.name});
+    impSetPending({id, at: Date.now(), name, engine});
     peStatus('Uploaded (encrypted).', 'good');
     impWait();
   } catch (e) {
@@ -1187,11 +1210,30 @@ function impWait() {
   clearTimeout(impTimer);
   const p = impPending(); if (!p) return;
   const mins = Math.max(0, Math.round((Date.now() - p.at) / 60000));
-  impBox(`<h3>Reading ${esc(p.name || 'your plan')} on GitHub…</h3>
-    <div>Code reads every table, then NVIDIA's AI checks each week on its own. This usually takes about 10 minutes
-      (<b>${mins} min</b> so far). You can close this or the page; the result will be waiting here when you open the editor again.</div>
-    <div class="imp-actions"><a href="https://github.com/${esc(CFG.repo)}/actions/workflows/import-plan.yml" target="_blank" rel="noopener" style="color:var(--accent)">Watch it on GitHub</a>
-      <button type="button" class="pe-link" style="margin-left:12px" data-imp="discard">Stop waiting</button></div>`);
+  const local = p.engine === 'local';
+  const later = 'You can close this or the page; the result will be waiting here when you open the editor again.';
+  let body;
+  if (!local) {
+    body = `<h3>Reading ${esc(p.name || 'your plan')} on GitHub…</h3>
+      <div>Code reads every table, then NVIDIA's AI checks each week on its own. This usually takes about 10 minutes
+        (<b>${mins} min</b> so far). ${later}</div>
+      <div class="imp-actions"><a href="https://github.com/${esc(CFG.repo)}/actions/workflows/import-plan.yml" target="_blank" rel="noopener" style="color:var(--accent)">Watch it on GitHub</a>
+        <button type="button" class="pe-link" style="margin-left:12px" data-imp="discard">Stop waiting</button></div>`;
+  } else if (p.started) {
+    const run = Math.max(0, Math.round((Date.now() - p.started) / 60000));
+    body = `<h3>Your laptop is reading ${esc(p.name || 'your plan')}…</h3>
+      <div>The local AI checks each week on its own. This usually takes about an hour (<b>${run} min</b> so far). Keep the laptop awake. ${later}</div>
+      <div class="imp-actions"><button type="button" class="pe-link" style="margin-left:0" data-imp="discard">Stop waiting</button></div>`;
+  } else {
+    const late = mins >= 2;
+    body = `<h3>Waiting for your laptop to pick up ${esc(p.name || 'your plan')}…</h3>
+      <div>${late ? `<b style="color:var(--warn)">Your laptop hasn't picked it up after ${mins} min.</b> Is it on and awake, with <b>start_worker.bat</b> open and Ollama running?`
+                  : 'The laptop checks for new plans every 30 seconds.'}</div>
+      <div class="imp-actions">${late ? (impFile ? '<button type="button" class="pe-secondary" data-imp="go-nvidia">Use NVIDIA instead</button>'
+                                               : '<span class="muted">To use NVIDIA instead, pick the file again with ⇪ Import .md.</span>') : ''}
+        <button type="button" class="pe-link" style="margin-left:0" data-imp="discard">Stop waiting</button></div>`;
+  }
+  impBox(body);
   impCheck(p);
 }
 
@@ -1201,7 +1243,9 @@ async function impCheck(p) {
     const r = await fetch(`https://api.github.com/repos/${CFG.repo}/contents/imports/result.json?ref=main&t=${Date.now()}`, {headers: ghHdr(), cache: 'no-store'});
     if (r.ok) {
       const res = JSON.parse(utf8b64((await r.json()).content));
-      if (res.id === p.id) { impShow(res); return; }
+      if (res.id === p.id && res.status === 'running') {
+        if (!p.started) { p.started = Date.parse(res.at) || Date.now(); impSetPending(p); impWait(); return; }
+      } else if (res.id === p.id) { impShow(res); return; }
     }
   } catch (e) {}
   impTimer = setTimeout(impWait, 20000);
@@ -1240,10 +1284,11 @@ function wireImport() {
     if (impPending() && !confirm('An import is already waiting for its result. Start a new one instead?')) return;
     file.click();
   });
-  file.addEventListener('change', () => { const f = file.files[0]; file.value = ''; if (f) importPlan(f); });
+  file.addEventListener('change', () => { const f = file.files[0]; file.value = ''; if (f) pickPlan(f); });
   document.getElementById('pe-import').addEventListener('click', ev => {
     const b = ev.target.closest('[data-imp]'); if (!b) return;
-    if (b.dataset.imp === 'discard') { clearTimeout(impTimer); impSetPending(null); impResult = null; impBox(''); peStatus(''); }
+    if (b.dataset.imp === 'go-nvidia' || b.dataset.imp === 'go-local') { clearTimeout(impTimer); importPlan(b.dataset.imp.slice(3)); }
+    if (b.dataset.imp === 'discard') { clearTimeout(impTimer); impSetPending(null); impResult = null; impFile = null; impBox(''); peStatus(''); }
     if (b.dataset.imp === 'load' && impResult) {
       draft = JSON.parse(JSON.stringify(impResult.plan));
       draft.sessions.sort((a, b) => a.d < b.d ? -1 : a.d > b.d ? 1 : 0);

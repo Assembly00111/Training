@@ -1,6 +1,7 @@
 name: Import plan
 
-# Runs when the dashboard uploads a plan (Edit plan -> Import .md).
+# Runs when the dashboard uploads a plan (Edit plan -> Import .md) for NVIDIA to check.
+# (Uploads for "My laptop" are skipped here; plan_worker.py on the laptop reads those.)
 # The upload is encrypted in the browser; only this job can decrypt it, using the
 # PLAN_IMPORT_PRIVATE_KEY secret. The plan is read by code and checked by NVIDIA's
 # AI (NVIDIA_API_KEY secret), and only the result (the new plan plus anything to
@@ -33,13 +34,20 @@ jobs:
         with:
           python-version: "3.12"
 
+      # Plans sent to "My laptop" are read by plan_worker.py on the laptop, not here.
+      - name: Which reader was asked for
+        id: eng
+        run: echo "engine=$(python3 -c 'import json; print(json.load(open("imports/request.json")).get("engine", "nvidia"))')" >> "$GITHUB_OUTPUT"
+
       - name: Decrypt the uploaded plan
         id: dec
+        if: steps.eng.outputs.engine != 'local'
         env:
           PLAN_IMPORT_PRIVATE_KEY: ${{ secrets.PLAN_IMPORT_PRIVATE_KEY }}
         run: node .github/scripts/decrypt_plan.mjs imports/request.json "$RUNNER_TEMP/plan.md" "$RUNNER_TEMP/id.txt"
 
       - name: Read and check the plan (code + NVIDIA)
+        if: steps.eng.outputs.engine != 'local'
         env:
           NVIDIA_API_KEY: ${{ secrets.NVIDIA_API_KEY }}
         run: python plan_import.py "$RUNNER_TEMP/plan.md" --nvidia --no-open --ci=imports/result.json --id="$(cat "$RUNNER_TEMP/id.txt")"
@@ -57,7 +65,7 @@ jobs:
           EOF
 
       - name: Save the result
-        if: always()
+        if: always() && steps.eng.outputs.engine != 'local'
         run: |
           rm -f "$RUNNER_TEMP/plan.md"
           git config user.name "github-actions[bot]"
